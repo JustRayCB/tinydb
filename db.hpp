@@ -8,8 +8,8 @@
  */
 typedef struct {
   student_t *data; /** The list of students **/
-  size_t lsize;    /** The logical size of the list **/
-  size_t psize;    /** The physical size of the list **/
+  size_t lsize;    /** The logical size of the list **/ // Nombre d'éléments dans la liste size()
+  size_t psize;    /** The physical size of the list **/ // Taille de la liste en mémoire sizeof()
 } database_t;
 
 /**
