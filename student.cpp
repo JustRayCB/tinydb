@@ -1,4 +1,4 @@
-#include "student.hpp"
+#include "student.h"
 
 #include <ctype.h>
 #include <stdio.h>

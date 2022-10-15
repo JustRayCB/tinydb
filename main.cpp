@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "db.hpp"
+#include "db.h"
 
 int main(int argc, char const *argv[]) {
   const char *db_path = "";

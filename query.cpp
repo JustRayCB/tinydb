@@ -1,4 +1,4 @@
-#include "query.hpp"
+#include "query.h"
 
 #include <time.h>
 

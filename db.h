@@ -1,7 +1,7 @@
 #ifndef _DB_H
 #define _DB_H
 
-#include "student.hpp"
+#include "student.h"
 
 /**
  * Database structure type.
