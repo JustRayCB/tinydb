@@ -35,20 +35,20 @@ void db_load(database_t *db, const char *path) {
 
 void db_init(database_t *db) {
   // Your code here
-  db->data = new student_t[1000]; // Initialise la liste pour qu'elle stocke 1000 étudiants
+  db->data = new student_t[100000]; // Initialise la liste pour qu'elle stocke 1000 étudiants
   db->lsize = 0;                  // Taille du nombre de cells occupé
-  db->psize = 1000;               // Taille réelle de la liste
+  db->psize = 10000;               // Taille réelle de la liste
 }
 
 void db_add(database_t *db, student_t student) {
   // Your code here
 
   if (db->lsize == db->psize) {
-      student_t *growStudents = new student_t[db->psize + 1000];        // Increase the size of the array
+      student_t *growStudents = new student_t[db->psize + 10000];        // Increase the size of the array
       for (size_t idx=0; idx < db->psize; idx++) {
           growStudents[idx] = db->data[idx];    // Copy all the elems of data
       } 
-      db->psize = db->psize + 1000;
+      db->psize = db->psize + 10000;
       
       delete [] db->data;   // Free old memory
       db->data = growStudents;  // Reassign pointer to the expanded array

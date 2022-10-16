@@ -19,9 +19,10 @@ int main(int argc, char const *argv[]) {
   db_init(&db);
   db_load(&db, db_path);
   isWorking(&db);
-
+  
   // Il y a sans doute des choses à faire ici...
   db_save(&db, db_path);
+  delete [] db.data;
   printf("Bye bye!\n");
   return 0;
 }
