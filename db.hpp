@@ -35,6 +35,6 @@ void db_load(database_t *db, const char *path);
  * db_init(&db);
  * ```
  **/
-void db_init(database_t *db);
+void db_init(database_t *db, int &size);
 
 #endif
