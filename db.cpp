@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <iostream>
+#include <fstream>
 
 #include "student.hpp"
 
@@ -27,9 +29,23 @@ void db_load(database_t *db, const char *path) {
         exit(1);
     }
     student_t student;
+
+    // nombre de bits du fichier
+    std::ifstream in(path, std::ifstream::ate | std::ifstream::binary);
+
+
+    std::cout << "len file : " << in.tellg() << std::endl;
+
+    std::cout << "len student : " << sizeof(student_t) << std::endl;
+
+    std::cout << "Preshot nb étudiants : len file / len sutdent = " << in.tellg() / sizeof(student_t) << std::endl;
+
     while (fread(&student, sizeof(student_t), 1, file)) {
         db_add(db, student);
     }
+
+
+
     fclose(file);
 }
 
