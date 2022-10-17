@@ -48,7 +48,7 @@ void db_add(database_t *db, student_t student) {
       for (size_t idx=0; idx < db->psize; idx++) {
           growStudents[idx] = db->data[idx];    // Copy all the elems of data
       } 
-      db->psize = db->psize + 100000;
+      db->psize = db->psize + 10000;
       
       delete [] db->data;   // Free old memory
       db->data = growStudents;  // Reassign pointer to the expanded array
