@@ -4,14 +4,26 @@
 #include "db.hpp"
 #include "student.hpp"
 
+//void isWorking(database_t *db){
+  //for (int idx=0; idx < 10; idx++) {
+    //student_t one = db->data[idx];
+    //std::cout << "This is the student " << one.fname << " " <<
+      //one.lname << " ID: " << one.id << " in section " << one.section << std::endl;
+
+
+  //}
+//}
+
 void isWorking(database_t *db){
+  char buffer[512];
   for (int idx=0; idx < 10; idx++) {
     student_t one = db->data[idx];
-    std::cout << "This is the student " << one.fname << " " <<
-      one.lname << " ID: " << one.id << " in section " << one.section << std::endl;
-
+    student_to_str(buffer, &one);
+    std::cout << buffer << std::endl;
 
   }
+
+
 }
 int main(int argc, char const *argv[]) {
   const char *db_path = argv[argc-1];
