@@ -25,19 +25,6 @@ void isWorking(database_t *db){
 
   }
 
-  struct tm date1;
-  date1.tm_year = 102;
-  date1.tm_mon = 03;
-  date1.tm_mday = 22;
-  student_t s1{14, "Hugo", "Callens", "informatique", date1};
-  struct tm date2;
-  date2.tm_year = 102;
-  date2.tm_mon = 03;
-  date2.tm_mday = 22;
-  student_t s2{14, "Hugo", "Callens", "informatique", date2};
-
-  std::cout << "Comparaison (doit return True)" << student_equals(&s1, &s2) << std::endl;
-
 }
 int main(int argc, char const *argv[]) {
   const char *db_path = argv[argc-1];
