@@ -9,3 +9,12 @@ void query_result_init(query_result_t* result, const char* query) {
   result->status = QUERY_SUCCESS;
   // Votre code ici
 }
+
+
+// FONCTION SELECT
+void *select(void *database){
+  
+
+    return nullptr;
+}
+
