@@ -1,6 +1,7 @@
 #ifndef _PARSING_H
 #define _PARSING_H
 
+#include <string>
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE /* Required to work with strptime, which is OS-dependent */
 #endif
@@ -37,5 +38,9 @@ bool parse_insert(char* query_arguments, char* fname, char* lname, unsigned* id,
  * Parse field=value selectors.
  **/
 bool parse_selectors(char* query, char* field, char* value);
+
+bool parse_selectors(std::string &query, std::string &field, std::string &value);
+
+bool parse_selectors(std::string &query, int &day, int &mon, int &year);
 
 #endif

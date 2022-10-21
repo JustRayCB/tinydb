@@ -1,10 +1,13 @@
 #include "parsing.hpp"
 
+#include <sstream>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
 #include "student.hpp"
+
+using namespace std;
 
 bool parse_update(char* query, char* field_filter, char* value_filter, char* field_to_update, char* update_value) {
     char* key_val_filter = strtok_r(NULL, " ", &query);  // key=val filter
@@ -61,7 +64,7 @@ bool parse_insert(char* query, char* fname, char* lname, unsigned* id, char* sec
 }
 
 bool parse_selectors(char* query, char* field, char* value) {
-    char* token = strtok_r(NULL, "=", &query);
+    char* token = strtok_r(NULL, "=", &query); // Premier paramètre = reste du string  qui a été coupé
     if (token == NULL) {
         return false;
     }
@@ -72,4 +75,47 @@ bool parse_selectors(char* query, char* field, char* value) {
     }
     strcpy(value, token);
     return true;
+}
+
+bool parse_selectors(string &query, string &field, string &value){
+    stringstream X(query);
+
+    string token;
+
+    if (!getline(X, token, '=')){
+        return false;
+    }
+    field = token;
+    if (!getline(X, token, '=')){
+        return false;
+    }
+ 
+    value = token;
+    return true;
+
+
+} 
+bool parse_selectors(string &query, int &day, int &mon, int &year){
+    stringstream X(query);
+
+    string token;
+
+    if (!getline(X, token, '/')){
+        return false;
+    }
+    day = stoul(token, nullptr, 10);
+
+    if (!getline(X, token, '/')){
+        return false;
+    }
+    mon = stoul(token, nullptr, 10);
+
+    if (!getline(X, token, '/')){
+        return false;
+    }
+    year = stoul(token, nullptr, 10)-1900;
+
+    return true;
+
+
 }

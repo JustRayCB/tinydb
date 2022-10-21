@@ -25,7 +25,7 @@ int student_equals(student_t* s1, student_t* s2) {
         and s1->birthdate.tm_mday == s2->birthdate.tm_mday and s1->birthdate.tm_mon == s2->birthdate.tm_mon){
       return 0;
   }
-  return 1;
+  return -1;
 }
 
 

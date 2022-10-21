@@ -1,5 +1,7 @@
 #ifndef _QUERY_H
 #define _QUERY_H
+#include <string>
+#include <vector>
 
 #include "db.hpp"
 
@@ -28,6 +30,10 @@ void query_result_init(query_result_t* result, const char* query);
  **/
 void query_result_add(query_result_t* result, student_t s);
 
-void  *select(void* database);
+
+std::vector<student_t*> select(database_t *database, std::string &query);
+
+
+void findStudents(database_t *database, std::string &field, std::string& value, std::vector<student_t*> &myStudents);
 
 #endif

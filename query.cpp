@@ -1,7 +1,18 @@
 #include "query.hpp"
+#include "db.hpp"
+#include "parsing.hpp"
+#include "student.hpp"
 
+#include <algorithm>
+#include <cstring>
+#include <iterator>
+#include <streambuf>
+#include <vector>
 #include <time.h>
+#include <iostream>
+#include <string>
 
+using namespace std;
 void query_result_init(query_result_t* result, const char* query) {
   struct timespec now;
   clock_gettime(CLOCK_REALTIME, &now);
@@ -11,10 +22,70 @@ void query_result_init(query_result_t* result, const char* query) {
 }
 
 
-// FONCTION SELECT
-void *select(void *database){
-  
+void findStudents(database_t *database, string &field, string& value, vector<student_t*> &myStudents){
+  size_t dbSize = database->lsize;
 
-    return nullptr;
+  for (size_t idx=0; idx < dbSize; idx++) {
+
+    //Just pour voir les info student en débuggant
+    //student_t st = database->data[idx];
+    //char one[512];
+    //student_to_str(one, &st);
+    //cout << one << endl;
+    
+    if (field == "id") {
+      if (database->data[idx].id == stoul(value, nullptr, 10)) {
+        myStudents.push_back(&(database->data[idx]));
+      }
+    }else if (field == "fname") {
+      if (database->data[idx].fname == value) {
+        myStudents.push_back(&(database->data[idx]));
+      }
+    }else if (field == "lname") {
+      if (database->data[idx].lname == value) {
+        myStudents.push_back(&(database->data[idx]));
+      }
+    }else if (field == "section") {
+      if (database->data[idx].section == value) {
+        myStudents.push_back(&(database->data[idx]));
+      }
+    }else if (field == "birthday"){
+      int day, mon, year;
+      if (parse_selectors(value, day, mon, year)) {
+        if ((day == database->data[idx].birthdate.tm_mday) 
+        and (mon == database->data[idx].birthdate.tm_mon) 
+        and (year == database->data[idx].birthdate.tm_year)) {
+          myStudents.push_back(&(database->data[idx]));
+        }else {
+          cout << "ERROR WITH BIRTHDAY" << endl;
+        }
+      }
+    }else {
+      cout << "ERROR WITH THE FIELD" << endl;
+    }
+    //memset(one, 0, sizeof(one)); Pour clear une char array
+}
+
+
+}
+
+// FONCTION SELECT
+vector<student_t*> select(database_t *database, string &query){
+  string field, value;
+  if (!parse_selectors(query, field, value)) {
+    cout << "Problem with the query" << endl;
+  }
+
+  vector<student_t*> studentList;
+  findStudents(database, field, value, studentList);
+  char buffer[512];
+  for (auto student : studentList) {
+    
+    student_to_str(buffer, student);
+    memset(buffer, 0, sizeof(buffer));
+  }
+  cout << "Taille liste :" << studentList.size() << endl;
+
+  return studentList;
 }
 
