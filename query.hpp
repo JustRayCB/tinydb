@@ -23,7 +23,7 @@ typedef struct {
 /**
  * Initialise a query_result_t structure.
  **/
-void query_result_init(query_result_t* result, const char* query);
+void query_result_init(query_result_t* result, std::string &query);
 
 /**
  * Add a student to a query result.
@@ -33,8 +33,10 @@ void query_result_add(query_result_t* result, student_t s);
 
 
 //std::vector<student_t*> select(database_t *database, std::string &query);
-query_result_t select(database_t *database, std::string &query);
+query_result_t select(database_t *database, std::string query);
 
-void findStudents(database_t *database, std::string &field, std::string& value, std::vector<student_t*> &myStudents);
+int findStudents(database_t *database, std::string &field, std::string& value, query_result_t &myQuery);
+
+
 
 #endif

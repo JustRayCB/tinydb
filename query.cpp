@@ -2,11 +2,8 @@
 #include "db.hpp"
 #include "parsing.hpp"
 #include "student.hpp"
+#include "utils.hpp"
 
-#include <algorithm>
-#include <cstring>
-#include <iterator>
-#include <streambuf>
 #include <vector>
 #include <time.h>
 #include <iostream>
@@ -19,9 +16,9 @@ void query_result_init(query_result_t* result, const char* query) {
   result->start_ns = now.tv_nsec + 1e9 * now.tv_sec;
   result->status = QUERY_SUCCESS;
   // Votre code ici
-  result->students = new student_t[1000];
+  result->students = new student_t[10000];
   result->lsize = 0;
-  result->psize = 1000;
+  result->psize = 10000;
   strcpy(result->query, query);
   result->end_ns = 0;
 
@@ -34,7 +31,23 @@ void query_result_init(query_result_t* result, const char* query) {
 }
 
 
-void findStudents(database_t *database, string &field, string& value, vector<student_t*> &myStudents){
+void query_result_add(query_result_t *result, student_t s){
+  
+  if (result->lsize == result->psize) {
+    student_t* growStudents = new student_t[result->psize+10000];
+    for (size_t idx=0; idx < result->psize ; idx++) {
+      growStudents[idx] = result->students[idx];
+    }
+    result->psize += 10000;
+    delete [] result->students;
+    result->students = growStudents;
+  }
+  result->students[result->lsize] = s;
+  result->lsize++;
+
+}
+
+int findStudents(database_t *database, string &field, string& value, query_result_t &myQuery ){
   size_t dbSize = database->lsize;
 
   for (size_t idx=0; idx < dbSize; idx++) {
@@ -47,19 +60,19 @@ void findStudents(database_t *database, string &field, string& value, vector<stu
     
     if (field == "id") {
       if (database->data[idx].id == stoul(value, nullptr, 10)) {
-        myStudents.push_back(&(database->data[idx]));
+        query_result_add(&myQuery, database->data[idx]);
       }
     }else if (field == "fname") {
       if (database->data[idx].fname == value) {
-        myStudents.push_back(&(database->data[idx]));
+        query_result_add(&myQuery, database->data[idx]);
       }
     }else if (field == "lname") {
       if (database->data[idx].lname == value) {
-        myStudents.push_back(&(database->data[idx]));
+        query_result_add(&myQuery, database->data[idx]);
       }
     }else if (field == "section") {
       if (database->data[idx].section == value) {
-        myStudents.push_back(&(database->data[idx]));
+        query_result_add(&myQuery, database->data[idx]);
       }
     }else if (field == "birthday"){
       int day, mon, year;
@@ -67,19 +80,17 @@ void findStudents(database_t *database, string &field, string& value, vector<stu
         if ((day == database->data[idx].birthdate.tm_mday) 
         and (mon == database->data[idx].birthdate.tm_mon) 
         and (year == database->data[idx].birthdate.tm_year)) {
-          myStudents.push_back(&(database->data[idx]));
-        }else {
-          cout << "ERROR WITH BIRTHDAY" << endl;
+        query_result_add(&myQuery, database->data[idx]);
         }
       }
     }else {
       cout << "ERROR WITH THE FIELD" << endl;
     }
     //memset(one, 0, sizeof(one)); Pour clear une char array
+  }
+  return 0;
 }
 
-
-}
 
 // FONCTION SELECT
 // DOIT LA TRANSFOMER POUR QU'ELLE RENVOIE UN QUERY_RESULT_T
@@ -103,14 +114,25 @@ void findStudents(database_t *database, string &field, string& value, vector<stu
 //}
 
 
-query_result_t select(database_t *database, string &query){
 
+
+query_result_t select(database_t *database, string query){
   query_result_t myQuery;
   string field, value;
   if (!parse_selectors(query, field, value)) {
     cout << "Problem with the query" << endl;
   }
-  query_result_init(myQuery, const char *query);
+  query_result_init(&myQuery, "select");
 
+  findStudents(database, field, value, myQuery);
+
+  struct timespec end;
+  clock_gettime(CLOCK_REALTIME, &end);
+  myQuery.end_ns = end.tv_nsec + 1e9 *end.tv_sec;
+
+  //log_query(&myQuery);
+  //delete [] myQuery.students;
+
+  return myQuery;
 
 }

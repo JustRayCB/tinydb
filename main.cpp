@@ -7,19 +7,21 @@
 #include "db.hpp"
 #include "student.hpp"
 #include "query.hpp"
+#include "utils.hpp"
 
 using namespace std;
 
 void isWorking(database_t *db){
   char buffer[512];
   int count = 0;
-  for (int idx=0; idx < 1000000; idx++) {
+  for (int idx=0; idx < 10; idx++) {
     student_t one = db->data[idx];
     if (strcmp(one.section, "info") == 0) {
-      //student_to_str(buffer, &one);
-      //std::cout << buffer << std::endl;
-      count++;
+            count++;
     }
+    student_to_str(buffer, &one);
+    std::cout << buffer << std::endl;
+
     memset(buffer, 0, sizeof(buffer));
     
   }
@@ -48,8 +50,12 @@ int main(int argc, char const *argv[]) {
 
     if (getLine == "select")
     {
+      query_result_t ret;
       string test = commandLine.substr(7, commandLine.length());
-      select(&db, test);
+      ret = select(&db, test);
+      log_query(&ret);
+      delete [] ret.students;
+
     }
     count++;
 
