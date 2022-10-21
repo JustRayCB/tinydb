@@ -23,6 +23,7 @@ void db_save(database_t *db, const char *path) {
 }
 
 void db_load(database_t *db, const char *path) {
+    std::cout << "Loading the database ..." << std::endl;
     FILE *file = fopen(path, "rb");
     if (!file) {
         perror("Could not open the DB file");
@@ -32,6 +33,8 @@ void db_load(database_t *db, const char *path) {
 
     // nombre de bits du fichier
     std::ifstream in(path, std::ifstream::ate | std::ifstream::binary);
+    int size = in.tellg()/sizeof(student_t);
+    db_init(db, size);
 
 
     std::cout << "len file : " << in.tellg() << std::endl;
@@ -44,27 +47,26 @@ void db_load(database_t *db, const char *path) {
         db_add(db, student);
     }
 
-
-
     fclose(file);
+    std::cout << "Done!" << std::endl;
 }
 
-void db_init(database_t *db) {
+void db_init(database_t *db, int &size) {
   // Your code here
-  db->data = new student_t[100000]; // Initialise la liste pour qu'elle stocke 1000 étudiants
+  db->data = new student_t[size]; // Initialise la liste pour qu'elle stocke 1000 étudiants
   db->lsize = 0;                  // Taille du nombre de cells occupé
-  db->psize = 100000;               // Taille réelle de la liste
+  db->psize = size;               // Taille réelle de la liste
 }
 
 void db_add(database_t *db, student_t student) {
   // Your code here
 
   if (db->lsize == db->psize) {
-      student_t *growStudents = new student_t[db->psize + 100000];        // Increase the size of the array
+      student_t *growStudents = new student_t[db->psize + 1000];        // Increase the size of the array
       for (size_t idx=0; idx < db->psize; idx++) {
           growStudents[idx] = db->data[idx];    // Copy all the elems of data
       } 
-      db->psize = db->psize + 10000;
+      db->psize = db->psize + 1000;
       
       delete [] db->data;   // Free old memory
       db->data = growStudents;  // Reassign pointer to the expanded array

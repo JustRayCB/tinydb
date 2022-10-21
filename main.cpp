@@ -16,8 +16,8 @@ void isWorking(database_t *db){
   for (int idx=0; idx < 1000000; idx++) {
     student_t one = db->data[idx];
     if (strcmp(one.section, "info") == 0) {
-      student_to_str(buffer, &one);
-      std::cout << buffer << std::endl;
+      //student_to_str(buffer, &one);
+      //std::cout << buffer << std::endl;
       count++;
     }
     memset(buffer, 0, sizeof(buffer));
@@ -30,9 +30,8 @@ void isWorking(database_t *db){
 int main(int argc, char const *argv[]) {
   const char *db_path = argv[argc-1];
   database_t db;
-  db_init(&db);
   db_load(&db, db_path);
-  //isWorking(&db);
+  isWorking(&db);
 
   string commandLine; // Va stocker la command de l'usr
 
@@ -51,9 +50,6 @@ int main(int argc, char const *argv[]) {
     {
       string test = commandLine.substr(7, commandLine.length());
       select(&db, test);
-
-
-    
     }
     count++;
 
