@@ -15,16 +15,16 @@ void isWorking(database_t *db){
   int count = 0;
   for (int idx=0; idx < 1000000; idx++) {
     student_t one = db->data[idx];
-    if (strcmp(one.section, "info")) {
+    if (strcmp(one.section, "info") == 0) {
+      student_to_str(buffer, &one);
+      std::cout << buffer << std::endl;
       count++;
     }
-    student_to_str(buffer, &one);
-    std::cout << buffer << std::endl;
-
+    memset(buffer, 0, sizeof(buffer));
+    
   }
 
   cout << "Le nombre de personnes en info: " << count <<  endl;
-  memset(buffer, 0, sizeof(buffer));
 
 }
 int main(int argc, char const *argv[]) {
