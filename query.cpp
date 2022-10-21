@@ -19,6 +19,18 @@ void query_result_init(query_result_t* result, const char* query) {
   result->start_ns = now.tv_nsec + 1e9 * now.tv_sec;
   result->status = QUERY_SUCCESS;
   // Votre code ici
+  result->students = new student_t[1000];
+  result->lsize = 0;
+  result->psize = 1000;
+  strcpy(result->query, query);
+  result->end_ns = 0;
+
+  //Pour avoir le temps de fin en nanoseconds
+  //struct timespec end;
+  //clock_gettime(CLOCK_REALTIME, &now);
+  //result->end_ns = end.tv_nsec + 1e9 *end.tv_sec;
+
+  
 }
 
 
@@ -70,22 +82,35 @@ void findStudents(database_t *database, string &field, string& value, vector<stu
 }
 
 // FONCTION SELECT
-vector<student_t*> select(database_t *database, string &query){
+// DOIT LA TRANSFOMER POUR QU'ELLE RENVOIE UN QUERY_RESULT_T
+//vector<student_t*> select(database_t *database, string &query){
+  //string field, value;
+  //if (!parse_selectors(query, field, value)) {
+    //cout << "Problem with the query" << endl;
+  //}
+
+  //vector<student_t*> studentList;
+  //findStudents(database, field, value, studentList);
+  //char buffer[512];
+  //for (auto student : studentList) {
+    
+    //student_to_str(buffer, student);
+    //memset(buffer, 0, sizeof(buffer));
+  //}
+  //cout << "Taille liste :" << studentList.size() << endl;
+
+  //return studentList;
+//}
+
+
+query_result_t select(database_t *database, string &query){
+
+  query_result_t myQuery;
   string field, value;
   if (!parse_selectors(query, field, value)) {
     cout << "Problem with the query" << endl;
   }
+  query_result_init(myQuery, const char *query);
 
-  vector<student_t*> studentList;
-  findStudents(database, field, value, studentList);
-  char buffer[512];
-  for (auto student : studentList) {
-    
-    student_to_str(buffer, student);
-    memset(buffer, 0, sizeof(buffer));
-  }
-  cout << "Taille liste :" << studentList.size() << endl;
 
-  return studentList;
 }
-
