@@ -10,7 +10,7 @@
 #include <string>
 
 using namespace std;
-void query_result_init(query_result_t* result, const char* query) {
+void query_result_init(query_result_t* result, string& query) {
   struct timespec now;
   clock_gettime(CLOCK_REALTIME, &now);
   result->start_ns = now.tv_nsec + 1e9 * now.tv_sec;
@@ -19,7 +19,7 @@ void query_result_init(query_result_t* result, const char* query) {
   result->students = new student_t[10000];
   result->lsize = 0;
   result->psize = 10000;
-  strcpy(result->query, query);
+  strcpy(result->query, query.c_str());
   result->end_ns = 0;
 
   //Pour avoir le temps de fin en nanoseconds
@@ -122,7 +122,8 @@ query_result_t select(database_t *database, string query){
   if (!parse_selectors(query, field, value)) {
     cout << "Problem with the query" << endl;
   }
-  query_result_init(&myQuery, "select");
+  string qu = "select " + query;
+  query_result_init(&myQuery, qu);
 
   findStudents(database, field, value, myQuery);
 
