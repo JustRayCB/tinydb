@@ -32,6 +32,36 @@ bool parse_update(char* query, char* field_filter, char* value_filter, char* fie
     return true;
 }
 
+bool parse_update(string &query, string& field_filter, string &value_filter, string& field_to_update,
+        string &update_value){
+
+    stringstream X(query);
+
+    string key_val_filter;
+    if (!getline(X, key_val_filter, ' ')) {
+        return false;
+    }
+    string tmp;
+    if (!getline(X, tmp, ' ')) {
+        return false;
+    }
+    string key_val_update;
+    if (!getline(X, key_val_update, ' ')) {
+        return false;
+    }
+
+    if (!parse_selectors(key_val_filter, field_filter, value_filter)) {
+        return false;
+    }
+
+    if (!parse_selectors(key_val_update, field_to_update, update_value)) {
+        return false;
+    }
+    return true;
+
+}
+
+
 bool parse_insert(char* query, char* fname, char* lname, unsigned* id, char* section, struct tm* birthdate) {
     char* token = strtok_r(NULL, " ", &query);
     if (token == NULL) {

@@ -21,6 +21,8 @@
  * @return: false if the parsing was successful, true otherwise
  **/
 bool parse_update(char* query_arguments, char* field_filter, char* value_filter, char* field_to_update, char* update_value);
+bool parse_update(std::string &query, std::string& field_filter, std::string &value_filter, std::string& field_to_update,
+        std::string &update_value);
 
 /**
  * Parse the arguments of an insert query.
