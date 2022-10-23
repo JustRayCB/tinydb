@@ -56,6 +56,13 @@ int main(int argc, char const *argv[]) {
       log_query(&ret);
       delete [] ret.students;
 
+    }else if (getLine == "update") {
+      query_result_t ret;
+      string test = commandLine.substr(7, commandLine.length());
+      //ret = select(&db, test);
+      ret = update(&db, test);
+      log_query(&ret);
+      delete [] ret.students;
     }
     count++;
 

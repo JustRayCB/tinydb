@@ -35,8 +35,11 @@ void query_result_add(query_result_t* result, student_t s);
 //std::vector<student_t*> select(database_t *database, std::string &query);
 query_result_t select(database_t *database, std::string query);
 
-int findStudents(database_t *database, std::string &field, std::string& value, query_result_t &myQuery);
+int findStudents(database_t *database, const std::string &field, std::string& value, query_result_t &myQuery,
+     std::string &v_update, const std::string &f_update = " ");
 
 
+query_result_t update(database_t *database, std::string query);
+void updateStudent(const std::string &f_update, std::string &v_update, student_t &student);
 
 #endif

@@ -4,6 +4,7 @@
 #include "student.hpp"
 #include "utils.hpp"
 
+#include <cstring>
 #include <vector>
 #include <time.h>
 #include <iostream>
@@ -47,8 +48,34 @@ void query_result_add(query_result_t *result, student_t s){
 
 }
 
-int findStudents(database_t *database, string &field, string& value, query_result_t &myQuery ){
+  
+void updateStudent(const string &f_update, string &v_update, student_t &student){
+  if (f_update == "id") {
+    student.id = stoul(v_update, nullptr, 10);
+  }else if (f_update == "fname") {
+    strcpy(student.fname, v_update.c_str());
+  }else if (f_update == "lname") {
+    strcpy(student.lname, v_update.c_str());
+  }else if (f_update == "section") {
+    strcpy(student.section, v_update.c_str());
+  }else {
+    int day, mon, year;
+    parse_selectors(v_update, day, mon, year);
+    student.birthdate.tm_mday = day;
+    student.birthdate.tm_mon = mon;
+    student.birthdate.tm_year = year;
+  }
+
+
+}
+
+int findStudents(database_t *database, const string &field, string& value, query_result_t &myQuery ,
+    string &v_update,  const string &f_update){
   size_t dbSize = database->lsize;
+  bool isUpdate = false;
+  if (f_update != " ") {
+    isUpdate = true;
+  }
 
   for (size_t idx=0; idx < dbSize; idx++) {
 
@@ -60,18 +87,33 @@ int findStudents(database_t *database, string &field, string& value, query_resul
     
     if (field == "id") {
       if (database->data[idx].id == stoul(value, nullptr, 10)) {
+        if (isUpdate) {
+          updateStudent(f_update, v_update, database->data[idx]);
+        }
         query_result_add(&myQuery, database->data[idx]);
       }
     }else if (field == "fname") {
       if (database->data[idx].fname == value) {
+       if (isUpdate) {
+          updateStudent(f_update, v_update, database->data[idx]);
+        }
+
         query_result_add(&myQuery, database->data[idx]);
       }
     }else if (field == "lname") {
       if (database->data[idx].lname == value) {
+       if (isUpdate) {
+          updateStudent(f_update, v_update, database->data[idx]);
+        }
+
         query_result_add(&myQuery, database->data[idx]);
       }
     }else if (field == "section") {
       if (database->data[idx].section == value) {
+       if (isUpdate) {
+          updateStudent(f_update, v_update, database->data[idx]);
+        }
+
         query_result_add(&myQuery, database->data[idx]);
       }
     }else if (field == "birthday"){
@@ -80,7 +122,11 @@ int findStudents(database_t *database, string &field, string& value, query_resul
         if ((day == database->data[idx].birthdate.tm_mday) 
         and (mon == database->data[idx].birthdate.tm_mon) 
         and (year == database->data[idx].birthdate.tm_year)) {
-        query_result_add(&myQuery, database->data[idx]);
+         if (isUpdate) {
+          updateStudent(f_update, v_update, database->data[idx]);
+          }
+
+          query_result_add(&myQuery, database->data[idx]);
         }
       }
     }else {
@@ -120,12 +166,14 @@ query_result_t select(database_t *database, string query){
   query_result_t myQuery;
   string field, value;
   if (!parse_selectors(query, field, value)) {
-    cout << "Problem with the query" << endl;
+    cout << "Problem with the query select" << endl;
   }
   string qu = "select " + query;
   query_result_init(&myQuery, qu);
 
-  findStudents(database, field, value, myQuery);
+  findStudents(database, field, value, myQuery,
+               field); // Last parmateres field will not be used
+                       // It's here to complete the function's parmateres
 
   struct timespec end;
   clock_gettime(CLOCK_REALTIME, &end);
@@ -135,5 +183,24 @@ query_result_t select(database_t *database, string query){
   //delete [] myQuery.students;
 
   return myQuery;
+
+}
+
+query_result_t update(database_t *database, string query){
+  query_result_t myQuery;
+  string field_filter, value_filter, field_to_update, update_value;
+  if (!parse_update(query, field_filter, value_filter, field_to_update, update_value)) {
+    cout << "Problem with the query update" << endl;
+  }
+  string qu = "update " + query;
+  query_result_init(&myQuery, qu);
+  
+  findStudents(database, field_filter, value_filter, myQuery, update_value, field_to_update);
+  struct timespec end;
+  clock_gettime(CLOCK_REALTIME, &end);
+  myQuery.end_ns = end.tv_nsec + 1e9 *end.tv_sec;
+
+  return myQuery;
+
 
 }
