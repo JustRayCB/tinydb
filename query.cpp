@@ -5,6 +5,9 @@
 #include "utils.hpp"
 
 #include <cstring>
+#include <unistd.h>
+#include <sys/types.h>
+#include <type_traits>
 #include <vector>
 #include <time.h>
 #include <iostream>
@@ -161,6 +164,55 @@ int findStudents(database_t *database, const string &field, string& value, query
 
 
 
+bool getType(std::string &command, std::string &select, std::string &update, std::string &insert, std::string &del){
+  if (command.substr(0, 6) == "select") {
+    select = command;
+  }else if (command.substr(0, 6) == "update") {
+    update = command;
+  }else if (command.substr(0, 6) == "insert") {
+    insert = command;
+  }else if (command.substr(0, 6) == "delete"){
+    del = command;
+  }else {
+    return false;
+  }
+  return true;
+}
+
+bool getcommand(std::string &select, std::string &update, std::string &insert, std::string &del){
+  string commandLine;
+  cout << "> ";
+  getline(cin, commandLine);
+  if (commandLine.substr(0, 11) == "transaction") {
+    commandLine = "";
+    int count = 0;
+    while (commandLine.substr(0, 11) != "transaction" and count < 5) {
+      cout << "> ";
+      getline(cin, commandLine);
+      if (!getType(commandLine, select, update, insert, del)){
+        cout << "Please enter one of these instruction: "
+          "select, update, insert, delete or transaction if you want to end the command " << endl;
+        count ++;
+      }
+    }
+    if (count == 4) {
+      cout << "Sorry you have exceed the max attempt for an instruction" << endl;
+      select = "";
+      update = "";
+      insert = "";
+      del = "";
+      return false;
+    }
+  }else if (getType(commandLine, select, update, insert, del)) {
+    return true;
+  }else {
+    cout << "Please enter one of these instruction: "
+    "select, update, insert, delete or transaction if you want to end the command " << endl;
+    return false;
+  }
+  return true;
+}
+
 
 query_result_t select(database_t *database, string query){
   query_result_t myQuery;
@@ -201,6 +253,31 @@ query_result_t update(database_t *database, string query){
   myQuery.end_ns = end.tv_nsec + 1e9 *end.tv_sec;
 
   return myQuery;
+
+
+}
+
+bool createProcess(pid_t &selectSon, pid_t &updateSon, pid_t &insertSon, pid_t &deleteSon){
+ 
+  selectSon = fork();
+  if (selectSon < 0) { perror("Fork() Select"); return false;}
+  else if (!selectSon) {/*IN SELECT SON PROCESS*/ cout << "Select : " << getpid() << " père : " << getppid()<< endl;}
+  else {/*IN PARENT PROCESS*/
+    updateSon = fork();
+    if (updateSon < 0) {perror("fork() Update"); return false;}
+    else if (!updateSon) {/*IN UPDATE SON PROCESS*/  cout << "Update : " << getpid() << " père : " << getppid()<< endl;}    
+    else { /*IN PARENT PROCESS*/
+      deleteSon = fork();
+      if (deleteSon < 0) {perror("fork() Delete"); return false;}
+      else if (!deleteSon) {/*IN DELETE SON PROCESS*/  cout << "Delete : " << getpid() << " père : " << getppid()<< endl;}    
+      else {/*IN PARENT PROCESS*/
+        insertSon = fork();
+        if (insertSon < 0) {perror("fork() Insert"); return false;}
+        else if (!insertSon) {/*IN INSERT SON PROCESS*/  cout << "Insert : " << getpid() << " père : " << getppid()<< endl;}    
+      }
+    }
+  }
+  return true;
 
 
 }
