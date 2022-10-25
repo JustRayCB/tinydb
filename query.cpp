@@ -348,16 +348,16 @@ bool createProcess(pid_t &selectSon, pid_t &updateSon, pid_t &insertSon, pid_t &
     updateSon = fork();
     if (updateSon < 0) {perror("fork() Update"); return false;}
     else if (!updateSon) {/*IN UPDATE SON PROCESS*/  /*cout << "Update : " << getpid() << " père : " << getppid()<< endl;*/}    
-    //else { [>IN PARENT PROCESS<]
-      //deleteSon = fork();
-      //if (deleteSon < 0) {perror("fork() Delete"); return false;}
+    else { //[>IN PARENT PROCESS<]
+      deleteSon = fork();
+      if (deleteSon < 0) {perror("fork() Delete"); return false;}
       //else if (!deleteSon) {[>IN DELETE SON PROCESS<]  cout << "Delete : " << getpid() << " père : " << getppid()<< endl;}    
       //else {[>IN PARENT PROCESS<]
         //insertSon = fork();
         //if (insertSon < 0) {perror("fork() Insert"); return false;}
         //else if (!insertSon) {[>IN INSERT SON PROCESS<]  cout << "Insert : " << getpid() << " père : " << getppid()<< endl;}    
       //}
-    //}
+    }
   }
   return true;
 

@@ -80,7 +80,7 @@ int main(int argc, char const *argv[]) {
         //char real[256];
         //strcpy(real, insertS.c_str());
         //write(fdInsert[1], &real, 256);
-      else {
+      else if (delS != ""){
         char real[256];
         strcpy(real, delS.c_str());
         write(fdDelete[1], &real, 256);
@@ -115,9 +115,9 @@ int main(int argc, char const *argv[]) {
         log_query(&ret);
         delete [] ret.students;
       }
-      else {
+      else if (deleteSon == 0){
         char got[256];
-        cout << "DELETE" << endl;
+        //cout << "DELETE" << endl;
         close(fdDelete[1]);
         read(fdDelete[0], &got, 256);
         string command = got;
