@@ -141,7 +141,7 @@ int findStudents(database_t *database, const string &field, string& value, query
   return 0;
 }
 
-void deleteStudents(database_t *database, string field, string value) {
+void deleteStudents(database_t *database, string field, string value, query_result_t &myQuery) {
   size_t dbSize = database->lsize;
   int count = 0;
   string toDel = "toDelete";
@@ -149,21 +149,25 @@ void deleteStudents(database_t *database, string field, string value) {
     if (field == "id") {
       if (database->data[idx].lname == value) {
         updateStudent("section", toDel, database->data[idx]);
+        query_result_add(&myQuery, database->data[idx]);
         count++;
       }
     } else if (field == "fname") {
-      if (database->data[idx].lname == value) {
+      if (database->data[idx].fname == value) {
         updateStudent("section", toDel, database->data[idx]);
+        query_result_add(&myQuery, database->data[idx]);
         count++;
       }
     } else if (field == "lname") {
       if (database->data[idx].lname == value) {
         updateStudent("section", toDel, database->data[idx]);
+        query_result_add(&myQuery, database->data[idx]);
         count++;
       }
     } else if (field == "section") {
       if (database->data[idx].section == value) {
         updateStudent("section", toDel, database->data[idx]);
+        query_result_add(&myQuery, database->data[idx]);
         count++;
       }
     } else if (field == "birthday") {
@@ -173,6 +177,7 @@ void deleteStudents(database_t *database, string field, string value) {
         and (mon == database->data[idx].birthdate.tm_mon) 
         and (year == database->data[idx].birthdate.tm_year)) {
           updateStudent("section", toDel, database->data[idx]);
+          query_result_add(&myQuery, database->data[idx]);
           count++;
         }
       }
@@ -182,24 +187,27 @@ void deleteStudents(database_t *database, string field, string value) {
     }
   }
 
-  // on crée une nouvelle liste d'étudiants de la taille de la précédente moins le compteur
-  // (on soustrait le nombre d'étudiants à supprimer)
-  student_t* growStudents = new student_t[database->psize - count];
+  if (!count == 0) {
+    // on crée une nouvelle liste d'étudiants de la taille de la précédente moins le compteur
+    // (on soustrait le nombre d'étudiants à supprimer)
+    student_t* growStudents = new student_t[database->psize - count];
 
-  int ignored = 0;
+    int ignored = 0;
 
-  for (size_t i = 0; i < database->psize; i++) {
-    if (database->data[i].section != toDel) {
-      growStudents[i - ignored] = database->data[i];
-    } else {
-      ignored++;
+    for (size_t i = 0; i < database->psize; i++) {
+      if (database->data[i].section != toDel) {
+        growStudents[i - ignored] = database->data[i];
+      } else {
+        ignored++;
+      }
     }
+
+    delete []database->data;
+
+    database->data = growStudents;
+    database->lsize = database->lsize - count;
   }
 
-  delete []database->data;
-
-  database->data = growStudents;
-  database->psize = database->psize - count;
 
 
 }
@@ -214,7 +222,20 @@ query_result_t deletion(database_t *database, string query) {
   string qu = "delete " + query;
   query_result_init(&myQuery, qu);
 
-  deleteStudents(database, field, value);
+  cout << "Avant delete " << database->lsize << endl;
+  deleteStudents(database, field, value, myQuery);
+
+
+
+  cout << "Après delete " << database->lsize << endl;
+
+  string name = "Iora";
+  for(size_t idx=0; idx < database->lsize; idx++) {
+    if (database->data[idx].fname == name) {
+      cout << "Trouvé" << endl;
+    }
+  }
+
 
   struct timespec end;
   clock_gettime(CLOCK_REALTIME, &end);

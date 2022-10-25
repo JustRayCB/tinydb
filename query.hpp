@@ -43,7 +43,7 @@ query_result_t update(database_t *database, std::string query);
 void updateStudent(const std::string &f_update, std::string &v_update, student_t &student);
 
 query_result_t deletion(database_t *database, std::string query);
-void deleteStudents(database_t *database, std::string field, std::string value);
+void deleteStudents(database_t *database, std::string field, std::string value, query_result_t &myQuery);
 
 bool getcommand(std::string &select, std::string &update, std::string &insert, std::string &del);
 bool getType(std::string &command, std::string &select, std::string &update, std::string &insert, std::string &del);
