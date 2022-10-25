@@ -48,13 +48,13 @@ int main(int argc, char const *argv[]) {
   int count = 0 ; // Just pour donner une condition à while;
 
   // CREATION DES FD:
-  int fdSelect[2], fdUpdate[2];//fdDelete[2], fdInsert[2];
+  int fdSelect[2], fdUpdate[2], fdDelete[2];//, fdInsert[2];
   // CREATION PID
   pid_t selectSon = 1, updateSon = 1, deleteSon = 1, insertSon = 1;
 
   if (pipe(fdSelect) < 0) {perror("Pipes() Select");}
   if (pipe(fdUpdate) < 0) {perror("Pipes() Update");}
-  //if (pipe(fdDelete) < 0) {perror("Pipes() Delete");}
+  if (pipe(fdDelete) < 0) {perror("Pipes() Delete");}
   //if (pipe(fdInsert) < 0) {perror("Pipes() Insert");}
   
   if (!createProcess(selectSon, updateSon, insertSon, deleteSon)){ return 1;}
@@ -80,12 +80,11 @@ int main(int argc, char const *argv[]) {
         //char real[256];
         //strcpy(real, insertS.c_str());
         //write(fdInsert[1], &real, 256);
-      //}else {
-        //char real[256];
-        //strcpy(real, delS.c_str());
-        //write(fdDelete[1], &real, 256);
-      //}
-
+      else {
+        char real[256];
+        strcpy(real, delS.c_str());
+        write(fdDelete[1], &real, 256);
+      }
     }
     else {
       //SON READ
@@ -116,6 +115,19 @@ int main(int argc, char const *argv[]) {
         log_query(&ret);
         delete [] ret.students;
       }
+      else {
+        char got[256];
+        cout << "DELETE" << endl;
+        close(fdDelete[1]);
+        read(fdDelete[0], &got, 256);
+        string command = got;
+        query_result_t ret;
+        ret = deletion(&db, command.substr(7, command.length()) );
+        cout << &ret;
+        log_query(&ret);
+        delete [] ret.students;
+      }
+    }
       //else if (insertSon == 0) {
         //char got[256];
         //close(fdInsert[1]);
@@ -125,18 +137,7 @@ int main(int argc, char const *argv[]) {
         //ret = insert(&db, command.substr(7, command.length()) );
         //log_query(&ret);
         //delete [] ret.students;
-      //}else {
-        //char got[256];
-        //close(fdDelete[1]);
-        //read(fdDelete[0], &got, 256);
-        //string command = got;
-        //query_result_t ret;
-        //ret = delete(&db, command.substr(7, command.length()) );
-        //log_query(&ret);
-        //delete [] ret.students;
-      //}
-    }
-  }  
+    }  
 
     // Il y a sans doute des choses à faire ici...
   db_save(&db, db_path);

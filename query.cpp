@@ -141,6 +141,87 @@ int findStudents(database_t *database, const string &field, string& value, query
   return 0;
 }
 
+void deleteStudents(database_t *database, string field, string value) {
+  size_t dbSize = database->lsize;
+  int count = 0;
+  string toDel = "toDelete";
+  for (size_t idx = 0; idx  < dbSize; idx++) {
+    if (field == "id") {
+      if (database->data[idx].lname == value) {
+        updateStudent("section", toDel, database->data[idx]);
+        count++;
+      }
+    } else if (field == "fname") {
+      if (database->data[idx].lname == value) {
+        updateStudent("section", toDel, database->data[idx]);
+        count++;
+      }
+    } else if (field == "lname") {
+      if (database->data[idx].lname == value) {
+        updateStudent("section", toDel, database->data[idx]);
+        count++;
+      }
+    } else if (field == "section") {
+      if (database->data[idx].section == value) {
+        updateStudent("section", toDel, database->data[idx]);
+        count++;
+      }
+    } else if (field == "birthday") {
+      int day, mon, year;
+      if (parse_selectors(value, day, mon, year)) {
+        if ((day == database->data[idx].birthdate.tm_mday) 
+        and (mon == database->data[idx].birthdate.tm_mon) 
+        and (year == database->data[idx].birthdate.tm_year)) {
+          updateStudent("section", toDel, database->data[idx]);
+          count++;
+        }
+      }
+
+    } else {
+      cout << "ERROR WITH FIELD" << endl;
+    }
+  }
+
+  // on crée une nouvelle liste d'étudiants de la taille de la précédente moins le compteur
+  // (on soustrait le nombre d'étudiants à supprimer)
+  student_t* growStudents = new student_t[database->psize - count];
+
+  int ignored = 0;
+
+  for (size_t i = 0; i < database->psize; i++) {
+    if (database->data[i].section != toDel) {
+      growStudents[i - ignored] = database->data[i];
+    } else {
+      ignored++;
+    }
+  }
+
+  delete []database->data;
+
+  database->data = growStudents;
+  database->psize = database->psize - count;
+
+
+}
+
+
+query_result_t deletion(database_t *database, string query) {
+  query_result_t myQuery;
+  string field, value;
+  if (!parse_selectors(query, field, value)) {
+    cout << "Problem with the query delete" << endl;
+  }
+  string qu = "delete " + query;
+  query_result_init(&myQuery, qu);
+
+  deleteStudents(database, field, value);
+
+  struct timespec end;
+  clock_gettime(CLOCK_REALTIME, &end);
+  myQuery.end_ns = end.tv_nsec + 1e9 *end.tv_sec;
+
+  return myQuery;
+}
 
 // FONCTION SELECT
 // DOIT LA TRANSFOMER POUR QU'ELLE RENVOIE UN QUERY_RESULT_T
