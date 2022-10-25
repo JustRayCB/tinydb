@@ -48,121 +48,95 @@ int main(int argc, char const *argv[]) {
   int count = 0 ; // Just pour donner une condition à while;
 
   // CREATION DES FD:
-  int fdSelect[2], fdUpdate[2], fdDelete[2], fdInsert[2];
+  int fdSelect[2], fdUpdate[2];//fdDelete[2], fdInsert[2];
   // CREATION PID
   pid_t selectSon = 1, updateSon = 1, deleteSon = 1, insertSon = 1;
-  if (!createProcess(selectSon, updateSon, insertSon, deleteSon)){ return 1;}
 
   if (pipe(fdSelect) < 0) {perror("Pipes() Select");}
   if (pipe(fdUpdate) < 0) {perror("Pipes() Update");}
-  if (pipe(fdDelete) < 0) {perror("Pipes() Delete");}
-  if (pipe(fdInsert) < 0) {perror("Pipes() Insert");}
+  //if (pipe(fdDelete) < 0) {perror("Pipes() Delete");}
+  //if (pipe(fdInsert) < 0) {perror("Pipes() Insert");}
   
+  if (!createProcess(selectSon, updateSon, insertSon, deleteSon)){ return 1;}
   //// faut utiliser fork
-  while (count < 10)
-  {
-    string selectS = "", updateS = "", insertS = "", delS = "";
-    //if (!selectSon and !updateSon and !insertSon and !deleteSon) { // PARENT PROCESS
-    if (getpid() == father) { // PARENT PROCESS
-      getcommand(selectS, updateS, insertS, delS);
-    }
+ while (count < 10) {
     if (getpid() == father) {
-      kill(selectSon, SIGCONT);
-      kill(updateSon, SIGCONT);
-      kill(insertSon, SIGCONT);
-      kill(deleteSon, SIGCONT);
-    }
-    //if (selectSon != 1 and updateSon != 1 and insertSon != 1 and deleteSon != 1) { // PARENT PROCESS
-    //if (!(selectSon == 0 or updateSon == 0 or insertSon == 0 or deleteSon == 0)) { // PARENT PROCESS
-    
-    if (selectS != "" and selectSon==0) {
-      cout << "C'est le process : " << getpid() << " qui fait ça et le père est : " << getppid() << endl;
-      query_result_t ret;
-      ret = select(&db, selectS.substr(7, selectS.length()) );
-      log_query(&ret);
-      delete [] ret.students;
-      exit(0);
+      //FATHER WRITE
+      string selectS = "", updateS = "", insertS = "", delS = "";
+      sleep(1);
+      getcommand(selectS, updateS, insertS, delS);
+      if (selectS != "") {
+        char real[256];
+        strcpy(real, selectS.c_str());
+        write(fdSelect[1], &real, 256);
+        //close(fdSelect[1]);
+      }else if (updateS != "") {
+        char real[256];
+        strcpy(real, updateS.c_str());
+        write(fdUpdate[1], &real, 256);
+
+      }
+      //else if (insertS != "") {
+        //char real[256];
+        //strcpy(real, insertS.c_str());
+        //write(fdInsert[1], &real, 256);
+      //}else {
+        //char real[256];
+        //strcpy(real, delS.c_str());
+        //write(fdDelete[1], &real, 256);
+      //}
 
     }
-    if (updateS != "" and updateSon==0) {
-      cout << "C'est le process : " << getpid() << " qui fait ça et le père est : " << getppid() << endl;
-      query_result_t ret;
-      ret = update(&db, updateS.substr(7, updateS.length()) );
-      log_query(&ret);
-      delete [] ret.students;
-      exit(0);
+    else {
+      //SON READ
+      if (selectSon == 0) {
+        //cout << "SELECT" << endl;
+        char got[256];
+        close(fdSelect[1]);
+        read(fdSelect[0], &got, 256);
+        //cout <<"I have received " <<  got << endl;
+        //close(fdSelect[1]);
+        string command = got;
+        //cout << "C'est le process : " << getpid() << " qui fait ça et le père est : " << getppid() << endl;
+        query_result_t ret;
+        ret = select(&db, command.substr(7, command.length()) );
+        log_query(&ret);
+        delete [] ret.students;
+      }
+      else if (updateSon == 0) {
+        //cout << "UPDATE" << endl;
+        char got[256];
+        close(fdUpdate[1]);
+        read(fdUpdate[0], &got, 256);
+        //cout << "I have received " << got << endl;
+        string command = got;
+        //cout << "C'est le process : " << getpid() << " qui fait ça et le père est : " << getppid() << endl;
+        query_result_t ret;
+        ret = update(&db, command.substr(7, command.length()) );
+        log_query(&ret);
+        delete [] ret.students;
+      }
+      //else if (insertSon == 0) {
+        //char got[256];
+        //close(fdInsert[1]);
+        //read(fdInsert[0], &got, 256);
+        //string command = got;
+        //query_result_t ret;
+        //ret = insert(&db, command.substr(7, command.length()) );
+        //log_query(&ret);
+        //delete [] ret.students;
+      //}else {
+        //char got[256];
+        //close(fdDelete[1]);
+        //read(fdDelete[0], &got, 256);
+        //string command = got;
+        //query_result_t ret;
+        //ret = delete(&db, command.substr(7, command.length()) );
+        //log_query(&ret);
+        //delete [] ret.students;
+      //}
     }
-     if (insertS != "" and insertSon==0) {
-      cout << "C'est le process : " << getpid() << " qui fait ça et le père est : " << getppid() << endl;
-      //query_result_t ret;
-      //ret = update(&db, updateS.substr(7, updateS.length()) );
-      //log_query(&ret);
-      //delete [] ret.students;
-      exit(0);
-    }
-     if ( delS != "" and deleteSon==0) {
-      cout << "C'est le process : " << getpid() << " qui fait ça et le père est : " << getppid() << endl;
-      //query_result_t ret;
-      //ret = update(&db, updateS.substr(7, updateS.length()) );
-      //log_query(&ret);
-      //delete [] ret.students;
-      exit(0);
-    }
-     if (getpid() != father) {
-       exit(0);
-     }
-
-
-    //if (!(selectSon == 0 or updateSon == 0 or insertSon == 0 or deleteSon == 0)) { // PARENT PROCESS
-    //if (getpid() == father) { // PARENT PROCESS
-      ////kill(selectSon, SIGKILL);
-      ////kill(updateSon, SIGKILL);
-      ////kill(insertSon, SIGKILL);
-      ////kill(deleteSon, SIGKILL);
-      //int c;
-      //cout << "nb to increment : ";
-      //cin >> c;
-      //count += c;
-    //}
-    //waitpid(selectSon, NULL, 0);
-    //waitpid(updateSon, NULL, 0);
-    //waitpid(insertSon, NULL, 0);
-    //waitpid(deleteSon, NULL, 0);
-     if (getpid() == father) {
-      kill(selectSon, SIGSTOP);
-      kill(updateSon, SIGSTOP);
-      kill(insertSon, SIGSTOP);
-      kill(deleteSon, SIGSTOP);
-    }
-
-    count++;
-
-    //cout << "> ";
-    //getline(std::cin, commandLine);
-
-    //string getLine = commandLine.substr(0, 6); // 0->6[ = Size of select, insert, update, delete
-    // mettre en lowercase
-
-    //if (getLine == "select")
-    //{
-      //query_result_t ret;
-      //string test = commandLine.substr(7, commandLine.length());
-      //ret = select(&db, test);
-      //log_query(&ret);
-      //delete [] ret.students;
-
-    //}else if (getLine == "update") {
-      //query_result_t ret;
-      //string test = commandLine.substr(7, commandLine.length());
-      ////ret = select(&db, test);
-      //ret = update(&db, test);
-      //log_query(&ret);
-      //delete [] ret.students;
-    //}
-    
-
-  }
-  
+  }  
 
     // Il y a sans doute des choses à faire ici...
   db_save(&db, db_path);

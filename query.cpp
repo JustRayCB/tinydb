@@ -54,7 +54,7 @@ void query_result_add(query_result_t *result, student_t s){
   
 void updateStudent(const string &f_update, string &v_update, student_t &student){
   if (f_update == "id") {
-    student.id = stoul(v_update, nullptr, 10);
+    student.id = (unsigned)stoi(v_update);
   }else if (f_update == "fname") {
     strcpy(student.fname, v_update.c_str());
   }else if (f_update == "lname") {
@@ -89,7 +89,8 @@ int findStudents(database_t *database, const string &field, string& value, query
     //cout << one << endl;
     
     if (field == "id") {
-      if (database->data[idx].id == stoul(value, nullptr, 10)) {
+      //if (database->data[idx].id == stoul(value, nullptr, 10)) {
+      if (database->data[idx].id == (unsigned)stoi(value)) {
         if (isUpdate) {
           updateStudent(f_update, v_update, database->data[idx]);
         }
@@ -261,23 +262,22 @@ bool createProcess(pid_t &selectSon, pid_t &updateSon, pid_t &insertSon, pid_t &
  
   selectSon = fork();
   if (selectSon < 0) { perror("Fork() Select"); return false;}
-  else if (!selectSon) {/*IN SELECT SON PROCESS*/ cout << "Select : " << getpid() << " père : " << getppid()<< endl;}
+  else if (!selectSon) {/*IN SELECT SON PROCESS*/ /*cout << "Select : " << getpid() << " père : " << getppid()<< endl;*/}
   else {/*IN PARENT PROCESS*/
     updateSon = fork();
     if (updateSon < 0) {perror("fork() Update"); return false;}
-    else if (!updateSon) {/*IN UPDATE SON PROCESS*/  cout << "Update : " << getpid() << " père : " << getppid()<< endl;}    
-    else { /*IN PARENT PROCESS*/
-      deleteSon = fork();
-      if (deleteSon < 0) {perror("fork() Delete"); return false;}
-      else if (!deleteSon) {/*IN DELETE SON PROCESS*/  cout << "Delete : " << getpid() << " père : " << getppid()<< endl;}    
-      else {/*IN PARENT PROCESS*/
-        insertSon = fork();
-        if (insertSon < 0) {perror("fork() Insert"); return false;}
-        else if (!insertSon) {/*IN INSERT SON PROCESS*/  cout << "Insert : " << getpid() << " père : " << getppid()<< endl;}    
-      }
-    }
+    else if (!updateSon) {/*IN UPDATE SON PROCESS*/  /*cout << "Update : " << getpid() << " père : " << getppid()<< endl;*/}    
+    //else { [>IN PARENT PROCESS<]
+      //deleteSon = fork();
+      //if (deleteSon < 0) {perror("fork() Delete"); return false;}
+      //else if (!deleteSon) {[>IN DELETE SON PROCESS<]  cout << "Delete : " << getpid() << " père : " << getppid()<< endl;}    
+      //else {[>IN PARENT PROCESS<]
+        //insertSon = fork();
+        //if (insertSon < 0) {perror("fork() Insert"); return false;}
+        //else if (!insertSon) {[>IN INSERT SON PROCESS<]  cout << "Insert : " << getpid() << " père : " << getppid()<< endl;}    
+      //}
+    //}
   }
   return true;
-
 
 }
