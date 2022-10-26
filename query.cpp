@@ -147,27 +147,27 @@ void deleteStudents(database_t *database, string field, string value, query_resu
   string toDel = "toDelete";
   for (size_t idx = 0; idx  < dbSize; idx++) {
     if (field == "id") {
-      if (database->data[idx].lname == value) {
-        updateStudent("section", toDel, database->data[idx]);
+      if (to_string(database->data[idx].id) == value) {
         query_result_add(&myQuery, database->data[idx]);
+        updateStudent("section", toDel, database->data[idx]);
         count++;
       }
     } else if (field == "fname") {
       if (database->data[idx].fname == value) {
-        updateStudent("section", toDel, database->data[idx]);
         query_result_add(&myQuery, database->data[idx]);
+        updateStudent("section", toDel, database->data[idx]);
         count++;
       }
     } else if (field == "lname") {
       if (database->data[idx].lname == value) {
-        updateStudent("section", toDel, database->data[idx]);
         query_result_add(&myQuery, database->data[idx]);
+        updateStudent("section", toDel, database->data[idx]);
         count++;
       }
     } else if (field == "section") {
       if (database->data[idx].section == value) {
-        updateStudent("section", toDel, database->data[idx]);
         query_result_add(&myQuery, database->data[idx]);
+        updateStudent("section", toDel, database->data[idx]);
         count++;
       }
     } else if (field == "birthday") {
@@ -176,8 +176,8 @@ void deleteStudents(database_t *database, string field, string value, query_resu
         if ((day == database->data[idx].birthdate.tm_mday) 
         and (mon == database->data[idx].birthdate.tm_mon) 
         and (year == database->data[idx].birthdate.tm_year)) {
-          updateStudent("section", toDel, database->data[idx]);
           query_result_add(&myQuery, database->data[idx]);
+          updateStudent("section", toDel, database->data[idx]);
           count++;
         }
       }
@@ -223,18 +223,14 @@ query_result_t deletion(database_t *database, string query) {
   query_result_init(&myQuery, qu);
 
   cout << "Avant delete " << database->lsize << endl;
+  for (int i = 0; i < 10; i++) {
+    cout << database->data[i].fname;
+  }
   deleteStudents(database, field, value, myQuery);
 
 
 
   cout << "Après delete " << database->lsize << endl;
-
-  string name = "Iora";
-  for(size_t idx=0; idx < database->lsize; idx++) {
-    if (database->data[idx].fname == name) {
-      cout << "Trouvé" << endl;
-    }
-  }
 
 
   struct timespec end;
