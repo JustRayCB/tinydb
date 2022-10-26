@@ -4,6 +4,7 @@
 #include "student.hpp"
 #include "utils.hpp"
 
+#include <cstddef>
 #include <cstring>
 #include <unistd.h>
 #include <sys/types.h>
@@ -192,13 +193,21 @@ void deleteStudents(database_t *database, string field, string value, query_resu
     // (on soustrait le nombre d'étudiants à supprimer)
     student_t* growStudents = new student_t[database->psize - count];
 
-    int ignored = 0;
+    //int ignored = 0;
 
-    for (size_t i = 0; i < database->psize; i++) {
-      if (database->data[i].section != toDel) {
-        growStudents[i - ignored] = database->data[i];
-      } else {
-        ignored++;
+    //for (size_t i = 0; i < database->psize; i++) {
+      //if (database->data[i].section != toDel) {
+        //growStudents[i - ignored] = database->data[i];
+      //} else {
+        //ignored++;
+      //}
+    //}
+    size_t grow = 0;
+    for (size_t idx=0; idx < database->lsize; idx++) {
+      if (database->data[idx].section == toDel) {
+      }else {
+        growStudents[grow] = database->data[idx];
+        grow++;
       }
     }
 
