@@ -202,6 +202,7 @@ void deleteStudents(database_t *database, string field, string value, query_resu
         //ignored++;
       //}
     //}
+    cout << "HERE" << endl;
     size_t grow = 0;
     for (size_t idx=0; idx < database->lsize; idx++) {
       if (database->data[idx].section == toDel) {
@@ -377,14 +378,53 @@ bool createProcess(pid_t &selectSon, pid_t &updateSon, pid_t &insertSon, pid_t &
     else { //[>IN PARENT PROCESS<]
       deleteSon = fork();
       if (deleteSon < 0) {perror("fork() Delete"); return false;}
-      //else if (!deleteSon) {[>IN DELETE SON PROCESS<]  cout << "Delete : " << getpid() << " père : " << getppid()<< endl;}    
-      //else {[>IN PARENT PROCESS<]
-        //insertSon = fork();
-        //if (insertSon < 0) {perror("fork() Insert"); return false;}
-        //else if (!insertSon) {[>IN INSERT SON PROCESS<]  cout << "Insert : " << getpid() << " père : " << getppid()<< endl;}    
-      //}
+      else if (!deleteSon) {/*[>IN DELETE SON PROCESS<]  cout << "Delete : " << getpid() << " père : " << getppid()<< endl;*/}    
+      else {//[>IN PARENT PROCESS<]
+        insertSon = fork();
+        if (insertSon < 0) {perror("fork() Insert"); return false;}
+        else if (!insertSon) {/*[>IN INSERT SON PROCESS<]  cout << "Insert : " << getpid() << " père : " << getppid()<< endl;*/}
+      }
     }
   }
   return true;
 
+}
+
+query_result_t insert(database_t* database, string query){
+    const char espace = ' ';
+    query_result_t myQuery;
+    string field_filter, value_filter, field_to_update, update_value;
+    if (!parse_update(query, field_filter, value_filter, field_to_update, update_value)) {
+        cout << "Problem with the query update" << endl;
+    }
+    string qu = "insert " + query;
+    query_result_init(&myQuery, qu);
+    student_t *student = new student_t;
+    char* copy_query = strdup(query.c_str());
+    strcpy(student->fname, strtok(copy_query, &espace));
+    strcpy(student->lname, strtok(NULL, &espace));
+    student-> id = atoi(strtok(NULL, &espace));
+    for(size_t i = 0; i < database->lsize;i++){
+      if(student-> id == database->data[i].id){
+        cout<<"Erreur"<<endl;
+        myQuery.status = QUERY_FAILURE;
+        free(copy_query);
+        free(student);
+        return myQuery;
+      }
+    }
+    char* dernier_espace = strtok(NULL, &espace);
+    strcpy(student->section, dernier_espace);
+    strptime(&copy_query[dernier_espace-copy_query+1],"%e/%m/%Y" ,&student->birthdate);
+    myQuery.students[0] = *student;
+    myQuery.lsize = 1;
+    database->data[database-> lsize] = *student ;
+    database->lsize += 1;
+    free(copy_query);
+    free(student);
+
+    struct timespec end;
+    clock_gettime(CLOCK_REALTIME, &end);
+    myQuery.end_ns = end.tv_nsec + 1e9 *end.tv_sec;
+    return myQuery;
 }

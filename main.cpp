@@ -21,12 +21,13 @@ using namespace std;
 void isWorking(database_t *db){
   char buffer[512];
   int count = 0;
-  for (int idx=0; idx < 10; idx++) {
+  for (size_t idx=0; idx < db->lsize; idx++) {
     student_t one = db->data[idx];
     if (strcmp(one.section, "info") == 0) {
             count++;
     }
     student_to_str(buffer, &one);
+    cout << "id : " << idx << " ";
     std::cout << buffer << std::endl;
 
     memset(buffer, 0, sizeof(buffer));
@@ -48,17 +49,21 @@ int main(int argc, char const *argv[]) {
 
   int count = 0 ; // Just pour donner une condition à while;
 
-  database_t *share = (database_t*)mmap(nullptr, sizeof(db), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+  database_t *share = (database_t*)mmap(nullptr, sizeof(database_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
   *share = db;
+  if (share == MAP_FAILED) {
+    cout << "ERROR WITH MMAP" << endl;
+    return 4;
+  }
   // CREATION DES FD:
-  int fdSelect[2], fdUpdate[2], fdDelete[2];//, fdInsert[2];
+  int fdSelect[2], fdUpdate[2], fdDelete[2], fdInsert[2];
   // CREATION PID
   pid_t selectSon = 1, updateSon = 1, deleteSon = 1, insertSon = 1;
 
   if (pipe(fdSelect) < 0) {perror("Pipes() Select");}
   if (pipe(fdUpdate) < 0) {perror("Pipes() Update");}
   if (pipe(fdDelete) < 0) {perror("Pipes() Delete");}
-  //if (pipe(fdInsert) < 0) {perror("Pipes() Insert");}
+  if (pipe(fdInsert) < 0) {perror("Pipes() Insert");}
   
   if (!createProcess(selectSon, updateSon, insertSon, deleteSon)){ return 1;}
   //// faut utiliser fork
@@ -81,10 +86,11 @@ int main(int argc, char const *argv[]) {
         write(fdUpdate[1], &real, 256);
 
       }
-      //else if (insertS != "") {
-        //char real[256];
-        //strcpy(real, insertS.c_str());
-        //write(fdInsert[1], &real, 256);
+      else if (insertS != "") {
+        char real[256];
+        strcpy(real, insertS.c_str());
+        write(fdInsert[1], &real, 256);
+      }
       else if (delS != ""){
         char real[256];
         strcpy(real, delS.c_str());
@@ -133,22 +139,24 @@ int main(int argc, char const *argv[]) {
         read(fdDelete[0], &got, 256);
         string command = got;
         query_result_t ret;
-        ret = deletion(share, command.substr(7, command.length()) );
+        ret = deletion(&db, command.substr(7, command.length()) );
         cout << &ret;
         log_query(&ret);
-        delete [] ret.students;
-      }
-    }
-      //else if (insertSon == 0) {
-        //char got[256];
-        //close(fdInsert[1]);
-        //read(fdInsert[0], &got, 256);
-        //string command = got;
-        //query_result_t ret;
-        //ret = insert(&db, command.substr(7, command.length()) );
-        //log_query(&ret);
         //delete [] ret.students;
-    }  
+      }
+      else if (insertSon == 0) {
+        cout << "INSERT :  " << getpid() << " father : " << getppid() << endl;
+        char got[256];
+        close(fdInsert[1]);
+        read(fdInsert[0], &got, 256);
+        string command = got;
+        query_result_t ret;
+        ret = insert(&db, command.substr(7, command.length()) );
+        log_query(&ret);
+        delete [] ret.students;
+      }  
+    }
+  }
 
     // Il y a sans doute des choses à faire ici...
   db_save(&db, db_path);

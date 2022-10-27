@@ -38,6 +38,8 @@ query_result_t select(database_t *database, std::string query);
 int findStudents(database_t *database, const std::string &field, std::string& value, query_result_t &myQuery,
      std::string &v_update, const std::string &f_update = " ");
 
+//Permets d'insert un student dans la base de données s'il n'est pas déjà dedans
+query_result_t insert(database_t* database, std::string query);
 
 query_result_t update(database_t *database, std::string query);
 void updateStudent(const std::string &f_update, std::string &v_update, student_t &student);
