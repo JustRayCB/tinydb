@@ -460,34 +460,34 @@ query_result_t insert(database_t* database, string query){
     const char espace = ' ';
     query_result_t myQuery;
     string field_filter, value_filter, field_to_update, update_value;
-    if (!parse_update(query, field_filter, value_filter, field_to_update, update_value)) {
-        cout << "Problem with the query update" << endl;
-    }
+    //*/if (!parse_i(query, field_filter, value_filter, field_to_update, update_value)) {
+       // cout << "Problem with the query insert" << endl;
+    //}
     string qu = "insert " + query;
+    student_t student;
     query_result_init(&myQuery, qu);
-    student_t *student = new student_t;
     char* copy_query = strdup(query.c_str());
-    strcpy(student->fname, strtok(copy_query, &espace));
-    strcpy(student->lname, strtok(NULL, &espace));
-    student-> id = atoi(strtok(NULL, &espace));
+    strcpy(student.fname, strtok(copy_query, &espace));
+    strcpy(student.lname, strtok(NULL, &espace));
+    student.id = atoi(strtok(NULL, &espace));
     for(size_t i = 0; i < database->lsize;i++){
-      if(student-> id == database->data[i].id){
+      if(student.id == database->data[i].id){
         cout<<"Erreur"<<endl;
         myQuery.status = QUERY_FAILURE;
         free(copy_query);
-        free(student);
         return myQuery;
       }
     }
     char* dernier_espace = strtok(NULL, &espace);
-    strcpy(student->section, dernier_espace);
-    strptime(&copy_query[dernier_espace-copy_query+1],"%e/%m/%Y" ,&student->birthdate);
-    myQuery.students[0] = *student;
+    strcpy(student.section, dernier_espace);
+    strptime(&copy_query[dernier_espace-copy_query+1],"%e/%m/%Y" ,&student.birthdate);
+    if(!parse_insert(copy_query, student.fname, student.lname, &student.id, student.section, &student.birthdate)){
+      cout << "Problem with the query insert" << endl;
+    }
+    myQuery.students[0] = student;
     myQuery.lsize = 1;
-    database->data[database-> lsize] = *student ;
-    database->lsize += 1;
+    db_add(database, student);
     free(copy_query);
-    free(student);
 
     struct timespec end;
     clock_gettime(CLOCK_REALTIME, &end);
