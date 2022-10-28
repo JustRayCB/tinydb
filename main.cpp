@@ -53,10 +53,10 @@ int main(int argc, char const *argv[]) {
   // tableau pour savoir si un processus à terminé de faire son travail:: 0 en train de travailler
   // 1 finis de travailler
   unsigned *tabStatus = (unsigned*)mmap(nullptr, sizeof(unsigned)*4, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0); 
-  tabStatus[0] = 0; //SELECT 
-  tabStatus[1] = 0; //UPDATE
-  tabStatus[2] = 0; //DELETE
-  tabStatus[3] = 0; //INSERT
+  tabStatus[0] = 1; //SELECT 
+  tabStatus[1] = 1; //UPDATE
+  tabStatus[2] = 1; //DELETE
+  tabStatus[3] = 1; //INSERT
   
   db_init(db, allStudents);
   db_load(db, db_path);
@@ -119,6 +119,7 @@ int main(int argc, char const *argv[]) {
         write(fdDelete[1], &real, 256);
       } else if (transacS != "") {
         while (tabStatus[0] == 0 and tabStatus[1] == 0 and tabStatus[2] == 0 and tabStatus[3] == 0) {
+          cout << "Waiting for process to  finish" << endl;
           usleep(250000); // sleep during 0.25 sec
         }
       }
@@ -157,7 +158,7 @@ int main(int argc, char const *argv[]) {
         delete [] ret.students;
         char buffer[256];student_to_str(buffer, &db->data[0]);
         cout << "MODIFICATION UPDATE: " << buffer << endl;
-        tabStatus[0] = 1;
+        tabStatus[1] = 1;
 
       }
       else if (deleteSon == 0){
@@ -172,7 +173,7 @@ int main(int argc, char const *argv[]) {
         cout << db->data[1].fname << endl;
         log_query(&ret);
         delete [] ret.students;
-        tabStatus[0] = 1;
+        tabStatus[2] = 1;
       }
       else if (insertSon == 0) {
         cout << "INSERT :  " << getpid() << " father : " << getppid() << endl;
@@ -184,7 +185,7 @@ int main(int argc, char const *argv[]) {
         ret = insert(db, command.substr(7, command.length()) );
         log_query(&ret);
         delete [] ret.students;
-        tabStatus[0] = 1;
+        tabStatus[3] = 1;
       }  
     }
   }

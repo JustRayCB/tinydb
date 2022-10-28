@@ -138,6 +138,7 @@ int findStudents(database_t *database, const string &field, string& value, query
       }
     }else {
       cout << "ERROR WITH THE FIELD" << endl;
+      break;
     }
     //memset(one, 0, sizeof(one)); Pour clear une char array
   }
