@@ -35,4 +35,6 @@ size_t safe_write(int fd, const void *buffer, size_t nbytes);
  **/
 void log_query(query_result_t *result);
 
+size_t getNumberStudent(const char *path);
+
 #endif  // _UTILS_H

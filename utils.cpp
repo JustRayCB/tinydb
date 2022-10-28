@@ -1,9 +1,11 @@
 #include "utils.hpp"
 
+#include <cstddef>
 #include <unistd.h>
 #include <iostream>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <fstream>
 
 #include "query.hpp"
 #include "student.hpp"
@@ -78,5 +80,20 @@ void log_query(query_result_t* result) {
     }
   }
 
-  
+}
+
+size_t getNumberStudent(const char *path){
+    std::ifstream in(path, std::ifstream::ate | std::ifstream::binary);
+    int size = in.tellg()/sizeof(student_t);
+    //db_init(db, size);
+
+
+    std::cout << "len file : " << in.tellg() << std::endl;
+
+    std::cout << "len student : " << sizeof(student_t) << std::endl;
+
+    std::cout << "Preshot nb étudiants : len file / len sutdent = " << in.tellg() / sizeof(student_t) << std::endl;
+
+    return size;
+
 }

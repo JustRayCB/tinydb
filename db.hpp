@@ -2,6 +2,7 @@
 #define _DB_H
 
 #include "student.hpp"
+#include <cstddef>
 
 /**
  * Database structure type.
@@ -35,6 +36,8 @@ void db_load(database_t *db, const char *path);
  * db_init(&db);
  * ```
  **/
-void db_init(database_t *db, int &size);
+void db_init(database_t *db, size_t &size);
+
+void dbCopy(student_t *newData, database_t *db);
 
 #endif

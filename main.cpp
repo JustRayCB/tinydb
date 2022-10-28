@@ -1,4 +1,5 @@
 #include <csignal>
+#include <cstddef>
 #include <sys/mman.h>
 #include <cstdlib>
 #include <cstring>
@@ -21,13 +22,12 @@ using namespace std;
 void isWorking(database_t *db){
   char buffer[512];
   int count = 0;
-  for (size_t idx=0; idx < db->lsize; idx++) {
+  for (size_t idx=0; idx < 10; idx++) {
     student_t one = db->data[idx];
     if (strcmp(one.section, "info") == 0) {
             count++;
     }
     student_to_str(buffer, &one);
-    cout << "id : " << idx << " ";
     std::cout << buffer << std::endl;
 
     memset(buffer, 0, sizeof(buffer));
@@ -39,22 +39,41 @@ void isWorking(database_t *db){
 }
 int main(int argc, char const *argv[]) {
   const char *db_path = argv[argc-1];
-  database_t db;
-  db_load(&db, db_path);
 
-  isWorking(&db);
+  //MEMOIRE PARTAGEE
+  size_t allStudents = getNumberStudent(db_path);
+  // PREMIER PARAMETRE DE MMAP nullptr -> Laisse choisir à l'os l'address de la
+  // mémoire partagée
+  // Si on y met l'address de la db on "essaye" de forcer l'os à mettre la
+  // mémoire partagée là ou il y la db
+  database_t *db= (database_t*)mmap(nullptr, sizeof(database_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+  db->data = (student_t*)mmap(nullptr, sizeof(student_t)*allStudents*2, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0); 
+  //cout << sizeof(*db) << endl;
+
+  // tableau pour savoir si un processus à terminé de faire son travail:: 0 en train de travailler
+  // 1 finis de travailler
+  unsigned *tabStatus = (unsigned*)mmap(nullptr, sizeof(unsigned)*4, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0); 
+  tabStatus[0] = 0; //SELECT 
+  tabStatus[1] = 0; //UPDATE
+  tabStatus[2] = 0; //DELETE
+  tabStatus[3] = 0; //INSERT
+  
+  db_init(db, allStudents);
+  db_load(db, db_path);
+
+  isWorking(db);
   pid_t father = getpid();
 
-  //string commandLine; // Va stocker la command de l'usr
 
   int count = 0 ; // Just pour donner une condition à while;
 
-  database_t *share = (database_t*)mmap(nullptr, sizeof(database_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-  *share = db;
-  if (share == MAP_FAILED) {
-    cout << "ERROR WITH MMAP" << endl;
-    return 4;
-  }
+  //database_t *share = (database_t*)mmap(nullptr, sizeof(database_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+  //share = db;
+  //if (share == MAP_FAILED) {
+    //cout << "ERROR WITH MMAP" << endl;
+    //return 4;
+  //}
+
   // CREATION DES FD:
   int fdSelect[2], fdUpdate[2], fdDelete[2], fdInsert[2];
   // CREATION PID
@@ -70,32 +89,40 @@ int main(int argc, char const *argv[]) {
  while (count < 10) {
     if (getpid() == father) {
       //FATHER WRITE
-      string selectS = "", updateS = "", insertS = "", delS = "";
+      string selectS = "", updateS = "", insertS = "", delS = "", transacS = "";
       sleep(1);
-      char buffer[256];student_to_str(buffer, &share->data[0]);
-      cout << "MODIFICATION 0: " << buffer << endl;
-      getcommand(selectS, updateS, insertS, delS);
+      isWorking(db);
+      getcommand(selectS, updateS, insertS, delS, transacS);
       if (selectS != "") {
+        tabStatus[0] = 0;
         char real[256];
         strcpy(real, selectS.c_str());
         write(fdSelect[1], &real, 256);
         //close(fdSelect[1]);
       }else if (updateS != "") {
+        tabStatus[1] = 0;
         char real[256];
         strcpy(real, updateS.c_str());
         write(fdUpdate[1], &real, 256);
 
       }
       else if (insertS != "") {
+        tabStatus[3] = 0;
         char real[256];
         strcpy(real, insertS.c_str());
         write(fdInsert[1], &real, 256);
       }
       else if (delS != ""){
+        tabStatus[2] = 0;
         char real[256];
         strcpy(real, delS.c_str());
         write(fdDelete[1], &real, 256);
+      } else if (transacS != "") {
+        while (tabStatus[0] == 0 and tabStatus[1] == 0 and tabStatus[2] == 0 and tabStatus[3] == 0) {
+          usleep(250000); // sleep during 0.25 sec
+        }
       }
+
     }
     else {
       //SON READ
@@ -110,9 +137,10 @@ int main(int argc, char const *argv[]) {
         string command = got;
         //cout << "C'est le process : " << getpid() << " qui fait ça et le père est : " << getppid() << endl;
         query_result_t ret;
-        ret = select(share, command.substr(7, command.length()));
+        ret = select(db, command.substr(7, command.length()));
         log_query(&ret);
         delete [] ret.students;
+        tabStatus[0] = 1;
       }
       else if (updateSon == 0) {
         cout << "UPDATE :  " << getpid() << " father : " << getppid() << endl;
@@ -124,11 +152,12 @@ int main(int argc, char const *argv[]) {
         string command = got;
         //cout << "C'est le process : " << getpid() << " qui fait ça et le père est : " << getppid() << endl;
         query_result_t ret;
-        ret = update(share, command.substr(7, command.length()) );
+        ret = update(db, command.substr(7, command.length()) );
         log_query(&ret);
         delete [] ret.students;
-        char buffer[256];student_to_str(buffer, &db.data[0]);
+        char buffer[256];student_to_str(buffer, &db->data[0]);
         cout << "MODIFICATION UPDATE: " << buffer << endl;
+        tabStatus[0] = 1;
 
       }
       else if (deleteSon == 0){
@@ -139,10 +168,11 @@ int main(int argc, char const *argv[]) {
         read(fdDelete[0], &got, 256);
         string command = got;
         query_result_t ret;
-        ret = deletion(&db, command.substr(7, command.length()) );
-        cout << &ret;
+        ret = deletion(db, command.substr(7, command.length()) );
+        cout << db->data[1].fname << endl;
         log_query(&ret);
-        //delete [] ret.students;
+        delete [] ret.students;
+        tabStatus[0] = 1;
       }
       else if (insertSon == 0) {
         cout << "INSERT :  " << getpid() << " father : " << getppid() << endl;
@@ -151,16 +181,17 @@ int main(int argc, char const *argv[]) {
         read(fdInsert[0], &got, 256);
         string command = got;
         query_result_t ret;
-        ret = insert(&db, command.substr(7, command.length()) );
+        ret = insert(db, command.substr(7, command.length()) );
         log_query(&ret);
         delete [] ret.students;
+        tabStatus[0] = 1;
       }  
     }
   }
 
     // Il y a sans doute des choses à faire ici...
-  db_save(&db, db_path);
-  delete [] db.data;
+  db_save(db, db_path);
+  delete [] db->data;
   printf("Bye bye!\n");
   return 0;
 }
