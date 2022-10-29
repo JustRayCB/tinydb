@@ -99,26 +99,31 @@ int main(int argc, char const *argv[]) {
         strcpy(real, selectS.c_str());
         write(fdSelect[1], &real, 256);
         //close(fdSelect[1]);
-      }else if (updateS != "") {
+      }if (updateS != "") {
         tabStatus[1] = 0;
         char real[256];
         strcpy(real, updateS.c_str());
         write(fdUpdate[1], &real, 256);
 
-      }
-      else if (insertS != "") {
+      }if (insertS != "") {
         tabStatus[3] = 0;
         char real[256];
         strcpy(real, insertS.c_str());
         write(fdInsert[1], &real, 256);
-      }
-      else if (delS != ""){
+      }if (delS != ""){
         tabStatus[2] = 0;
         char real[256];
         strcpy(real, delS.c_str());
         write(fdDelete[1], &real, 256);
-      } else if (transacS != "") {
-        while (tabStatus[0] == 0 and tabStatus[1] == 0 and tabStatus[2] == 0 and tabStatus[3] == 0) {
+      }if (transacS != "") {
+        cout << "tab[";
+        for (int idx = 0; idx <4; idx++) {
+          cout << tabStatus[idx] <<", ";
+
+        }
+        cout << "]" << endl;
+
+        while (tabStatus[0] == 0 or tabStatus[1] == 0 or tabStatus[2] == 0 or tabStatus[3] == 0) {
           cout << "Waiting for process to  finish" << endl;
           usleep(250000); // sleep during 0.25 sec
         }
@@ -139,6 +144,7 @@ int main(int argc, char const *argv[]) {
         //cout << "C'est le process : " << getpid() << " qui fait ça et le père est : " << getppid() << endl;
         query_result_t ret;
         ret = select(db, command.substr(7, command.length()));
+        //sleep(10);
         log_query(&ret);
         delete [] ret.students;
         tabStatus[0] = 1;
@@ -155,6 +161,7 @@ int main(int argc, char const *argv[]) {
         query_result_t ret;
         ret = update(db, command.substr(7, command.length()) );
         log_query(&ret);
+        //sleep(15);
         delete [] ret.students;
         char buffer[256];student_to_str(buffer, &db->data[0]);
         cout << "MODIFICATION UPDATE: " << buffer << endl;

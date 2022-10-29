@@ -292,6 +292,12 @@ query_result_t deletion(database_t *database, string query) {
   string field, value;
   if (!parse_selectors(query, field, value)) {
     cout << "Problem with the query delete" << endl;
+    myQuery.status = QUERY_FAILURE;
+    struct timespec end;
+    clock_gettime(CLOCK_REALTIME, &end);
+    myQuery.end_ns = end.tv_nsec + 1e9 *end.tv_sec;
+    return myQuery;
+
   }
   string qu = "delete " + query;
   query_result_init(&myQuery, qu);
@@ -313,28 +319,6 @@ query_result_t deletion(database_t *database, string query) {
 
   return myQuery;
 }
-
-// FONCTION SELECT
-// DOIT LA TRANSFOMER POUR QU'ELLE RENVOIE UN QUERY_RESULT_T
-//vector<student_t*> select(database_t *database, string &query){
-  //string field, value;
-  //if (!parse_selectors(query, field, value)) {
-    //cout << "Problem with the query" << endl;
-  //}
-
-  //vector<student_t*> studentList;
-  //findStudents(database, field, value, studentList);
-  //char buffer[512];
-  //for (auto student : studentList) {
-    
-    //student_to_str(buffer, student);
-    //memset(buffer, 0, sizeof(buffer));
-  //}
-  //cout << "Taille liste :" << studentList.size() << endl;
-
-  //return studentList;
-//}
-
 
 
 bool getType(std::string &command, std::string &select, std::string &update, std::string &insert, std::string &del){
@@ -394,6 +378,12 @@ query_result_t select(database_t *database, string query){
   string field, value;
   if (!parse_selectors(query, field, value)) {
     cout << "Problem with the query select" << endl;
+    myQuery.status = QUERY_FAILURE;
+    struct timespec end;
+    clock_gettime(CLOCK_REALTIME, &end);
+    myQuery.end_ns = end.tv_nsec + 1e9 *end.tv_sec;
+    return myQuery;
+
   }
   string qu = "select " + query;
   query_result_init(&myQuery, qu);
@@ -418,6 +408,11 @@ query_result_t update(database_t *database, string query){
   string field_filter, value_filter, field_to_update, update_value;
   if (!parse_update(query, field_filter, value_filter, field_to_update, update_value)) {
     cout << "Problem with the query update" << endl;
+    myQuery.status = QUERY_FAILURE;
+    struct timespec end;
+    clock_gettime(CLOCK_REALTIME, &end);
+    myQuery.end_ns = end.tv_nsec + 1e9 *end.tv_sec;
+    return myQuery;
   }
   string qu = "update " + query;
   query_result_init(&myQuery, qu);
@@ -483,6 +478,7 @@ query_result_t insert(database_t* database, string query){
     strptime(&copy_query[dernier_espace-copy_query+1],"%e/%m/%Y" ,&student.birthdate);
     if(!parse_insert(copy_query, student.fname, student.lname, &student.id, student.section, &student.birthdate)){
       cout << "Problem with the query insert" << endl;
+      myQuery.status = QUERY_FAILURE;
     }
     myQuery.students[0] = student;
     myQuery.lsize = 1;

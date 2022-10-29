@@ -30,5 +30,5 @@ clean:
 	rm logs/*
 clear:
 	rm *.o
-	#rm tinydb
-	rm main
+	rm tinydb
+	#rm main
