@@ -18,6 +18,7 @@ size_t safe_read(int fd, void* buffer, size_t nbytes) {
     perror("read error: ");
     exit(1);
   }
+  
   return (size_t)nbytes_read;
 }
 

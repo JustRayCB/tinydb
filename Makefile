@@ -3,7 +3,7 @@ FLAGS=-std=c++17 -Wall -Werror -Wpedantic -D_GNU_SOURCE -g
 COMPILER=g++
 
 main: main.cpp student.o parsing.o db.o query.o utils.o
-	${COMPILER} -o main main.cpp parsing.o student.o db.o query.o utils.o ${FLAGS}
+	${COMPILER} -o tinydb main.cpp parsing.o student.o db.o query.o utils.o ${FLAGS}
 
 run:
 	make main && ./tinydb
