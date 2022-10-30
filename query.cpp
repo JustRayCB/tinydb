@@ -450,40 +450,41 @@ bool createProcess(pid_t &selectSon, pid_t &updateSon, pid_t &insertSon, pid_t &
   return true;
 
 }
-
 query_result_t insert(database_t* database, string query){
     const char espace = ' ';
     query_result_t myQuery;
     string field_filter, value_filter, field_to_update, update_value;
-    //*/if (!parse_i(query, field_filter, value_filter, field_to_update, update_value)) {
-       // cout << "Problem with the query insert" << endl;
-    //}
-    string qu = "insert " + query;
     student_t student;
+    
+    string qu = "insert " + query;
     query_result_init(&myQuery, qu);
-    char* copy_query = strdup(query.c_str());
-    strcpy(student.fname, strtok(copy_query, &espace));
-    strcpy(student.lname, strtok(NULL, &espace));
-    student.id = atoi(strtok(NULL, &espace));
+    
+    char* copy_query[256]; // Copie pour avoir un char* et pas const char*
+    strcpy(*copy_query, query.c_str());
+    strcpy(student.fname, strtok(*copy_query, &espace));  // recopiage student->fname
+    strcpy(student.lname, strtok(NULL, &espace));  // recopiage student->lname
+    student.id = atoi(strtok(NULL, &espace));  // recopiage student->id
+    
+    // Check if ID already in database
     for(size_t i = 0; i < database->lsize;i++){
       if(student.id == database->data[i].id){
-        cout<<"Erreur"<<endl;
+        cout<<"Erreur ID est déjà dans la base de données."<<endl;
         myQuery.status = QUERY_FAILURE;
-        free(copy_query);
         return myQuery;
       }
     }
-    char* dernier_espace = strtok(NULL, &espace);
-    strcpy(student.section, dernier_espace);
-    strptime(&copy_query[dernier_espace-copy_query+1],"%e/%m/%Y" ,&student.birthdate);
-    if(!parse_insert(copy_query, student.fname, student.lname, &student.id, student.section, &student.birthdate)){
+    strcpy(student.section, strtok(NULL, &espace));  // recopiage student->section
+    strptime(strtok(NULL, &espace), "%e/%m/%Y" ,&student.birthdate);  // recopiage student->birthdate
+    strcpy(*copy_query, query.c_str());  // reset le pointeur au debut de la query
+    
+    if(!parse_insert(*copy_query, student.fname, student.lname, &student.id, student.section, &student.birthdate)){
       cout << "Problem with the query insert" << endl;
       myQuery.status = QUERY_FAILURE;
     }
+    // reussi, on sauvegarde
     myQuery.students[0] = student;
     myQuery.lsize = 1;
     db_add(database, student);
-    free(copy_query);
 
     struct timespec end;
     clock_gettime(CLOCK_REALTIME, &end);
