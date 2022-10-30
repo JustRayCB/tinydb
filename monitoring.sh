@@ -36,9 +36,20 @@ elif [[ $TO_LAUNCH == "status" ]]
 then
     echo "On est dans status"
     INSTANCE_COUNT=$(pgrep tinydb -c)
-    echo "$INSTANCE_COUNT instance running"
-    ALL_INSTANCES=$(pidof tinydb)
-    echo "$ALL_INSTANCES"
+    INSTANCE_COUNT=$((INSTANCE_COUNT/5))
+    echo "$INSTANCE_COUNT instance(s) running"
+    ALL_INSTANCES=$(pgrep tinydb)
+    COUNT=0
+    for pid in $ALL_INSTANCES
+    do
+        if ! ((COUNT % 5))
+        then
+            echo -e "  > PID $pid"
+            COUNT=$((COUNT+1))
+        else 
+            COUNT=$((COUNT+1))
+        fi
+    done
     
 
 elif [[ $TO_LAUNCH == "sync" ]]
