@@ -5,11 +5,11 @@ err(){
 }
 
 TO_LAUNCH=$1
-PATH_TO_DB=${2:-data/students.bin}
-QUERIES=$3
 
 if [[ $TO_LAUNCH == "run" ]]
 then
+    PATH_TO_DB=${2:-data/students.bin}
+    QUERIES=$3
     #soit le fichier existe
     if [[ -f "$PATH_TO_DB" ]]
     then
@@ -55,9 +55,57 @@ then
 elif [[ $TO_LAUNCH == "sync" ]]
 then
     echo "On est dans sync"
+    INSTANCE_COUNT=$(pgrep tinydb -c)
+    echo "Found $((INSTANCE_COUNT/5)) instance(s) of tinydb"
+    ALL_INSTANCES=$(pgrep tinydb)
+    COUNT=0
+    for pid in $ALL_INSTANCES
+    do
+        if ! ((COUNT % 5))
+        then
+            echo "  Sync process $pid..."
+            kill -SIGUSR1 $pid
+            COUNT=$((COUNT+1))
+        else
+            COUNT=$((COUNT+1))
+        fi
+    done
+    echo "Done"
+
+
+
 elif [[ $TO_LAUNCH == "shutdown" ]]
 then
     echo "On est dans shutdown"
+    PID=$2
+
+    if [[ $PID == "" ]]
+    then
+        #on devra demander pour chaque pid père si on veut le shutdown
+        echo "yo"
+    else    
+        ALL_INSTANCES=$(pgrep tinydb)
+        INSTANCE_COUNT=$(pgrep tinydb -c)
+        echo "$INSTANCE_COUNT"
+        
+        COUNT=0
+        for pid in $ALL_INSTANCES
+        do
+            if ! ((COUNT % 5))
+            then
+                COUNT=$((COUNT+1))
+                if [[ $pid == $PID ]]
+                then
+                    #si c'est un processus principal
+                    kill -SIGINT $PID
+                    break
+                fi
+            else
+                COUNT=$((COUNT+1))
+            fi
+        done
+    fi
+
 else
     echo -e "Mauvaise utilisation!\nUtilisez : './monitoring opt [chemin_vers_db] [fichier_requetes]'\nopt=run ou status ou sync ou shutdown\nLes crochets signifient que les arguments sont optionnels"
 fi

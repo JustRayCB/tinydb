@@ -37,7 +37,18 @@ void isWorking(database_t *db){
   cout << "Le nombre de personnes en info: " << count <<  endl;
 
 }
+
+void signalHandler(int signum) {
+   cout << "Ici on devrait save la db" << endl;
+   exit(signum);
+}
+
+
 int main(int argc, char const *argv[]) {
+
+  //SIGUSR1 POUR MONITORING SYNC
+  signal(SIGUSR1, signalHandler);
+
   const char *db_path = argv[argc-1];
 
   //MEMOIRE PARTAGEE
