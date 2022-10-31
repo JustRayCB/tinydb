@@ -8,7 +8,7 @@ STUDENT_SIZE = 256
 SUCCESS = 1
 FAILURE = 0
 # Path to the database used in the tests
-TEST_DB = "tests/data/test_db.bin"
+TEST_DB = "/home/cbr/Unif2/os/projet1/tests/data/test_db.bin"
 
 
 def check_log_content(logs, expected_lines):
@@ -25,7 +25,7 @@ def copy_db():
     Copy the database so that there is no risk of corrupting its data.
     """
     check_db()
-    filename = "tests/data/" + str(time.time()) + ".bin"
+    filename = "/home/cbr/Unif2/os/projet1/tests/data/" + str(time.time()) + ".bin"
     db = open(TEST_DB, "rb")
     f = open(filename, "wb")
     f.write(db.read())
@@ -66,8 +66,8 @@ def run_test(test_name, db_filename):
         os.makedirs("logs")
     except:
         pass
-    command = "./tinydb " + db_filename + " < tests/queries/" + \
-        test_name + ".txt > tests/test_" + test_name + ".output"
+    command = "../tinydb " + db_filename + " < /home/cbr/Unif2/os/projet1/tests/queries/" + \
+        test_name + ".txt > /home/cbr/Unif2/os/projet1/tests/test_" + test_name + ".output"
     print("Running test " + test_name + ": \"" + command + "\"")
     if os.system(command) != 0:
         print("The command '" + command + "' has issued an error!")
