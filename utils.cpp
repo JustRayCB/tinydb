@@ -63,7 +63,8 @@ void log_query(query_result_t* result) {
       strcpy(type, result->query);
       type[6] = '\0';
       sprintf(filename, "logs/%ld-%s.txt", result->start_ns, type);
-      printf("%s\n", filename);
+      //printf("%s\n", filename);
+      cout << filename << endl;
       FILE* f = fopen(filename, "w");
       float duration = (float)(result->end_ns - result->start_ns) / 1.0e6;
       sprintf(buffer, "Query \"%s\" completed in %fms with %ld results.\n", result->query, duration, result->lsize);

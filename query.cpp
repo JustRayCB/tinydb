@@ -123,7 +123,7 @@ int findStudents(database_t *database, const string &field, string& value, query
 
         query_result_add(&myQuery, database->data[idx]);
       }
-    }else if (field == "birthday"){
+    }else if (field == "birthdate"){
       int day, mon, year;
       if (parse_selectors(value, day, mon, year)) {
         if ((day == database->data[idx].birthdate.tm_mday) 
@@ -170,20 +170,23 @@ void deleteStudents(database_t *database, string field, string value, query_resu
         query_result_add(&myQuery, database->data[idx]);
         updateStudent("section", toDel, database->data[idx]);
         swapStudent(database, idx, newSize);
+        idx--;
       }
     } else if (field == "lname") {
         if (database->data[idx].lname == value) {
           query_result_add(&myQuery, database->data[idx]);
           updateStudent("section", toDel, database->data[idx]);
         swapStudent(database, idx, newSize);
+        idx--;
       }
     } else if (field == "section") {
         if (database->data[idx].section == value) {
           query_result_add(&myQuery, database->data[idx]);
           updateStudent("section", toDel, database->data[idx]);
         swapStudent(database, idx, newSize);
+        idx--;
       }
-    } else if (field == "birthday") {
+    } else if (field == "birthdate") {
         int day, mon, year;
         if (parse_selectors(value, day, mon, year)) {
           if ((day == database->data[idx].birthdate.tm_mday) 
@@ -192,97 +195,13 @@ void deleteStudents(database_t *database, string field, string value, query_resu
               query_result_add(&myQuery, database->data[idx]);
               updateStudent("section", toDel, database->data[idx]);
               swapStudent(database, idx, newSize);
+              idx--;
           }
         }
       }
-    //SWAP STUDENT
-    //student_t tmp = database->data[idx];
-    //database->data[idx] = database->data[newSize-1];
-    //database->data[newSize-1] = tmp;
-    //idx++;
-    //newSize--;
-    //if (field == "id") {
-      //break;
-    //}
     idx++;
   }
   database->lsize = newSize;
-
-  //size_t dbSize = database->lsize;
-  //int count = 0;
-  //string toDel = "toDelete";
-  //for (size_t idx = 0; idx  < dbSize; idx++) {
-    //if (field == "id") {
-      //if (to_string(database->data[idx].id) == value) {
-        //query_result_add(&myQuery, database->data[idx]);
-        //updateStudent("section", toDel, database->data[idx]);
-        //count++;
-      //}
-    //} else if (field == "fname") {
-      //if (database->data[idx].fname == value) {
-        //query_result_add(&myQuery, database->data[idx]);
-        //updateStudent("section", toDel, database->data[idx]);
-        //count++;
-      //}
-    //} else if (field == "lname") {
-      //if (database->data[idx].lname == value) {
-        //query_result_add(&myQuery, database->data[idx]);
-        //updateStudent("section", toDel, database->data[idx]);
-        //count++;
-      //}
-    //} else if (field == "section") {
-      //if (database->data[idx].section == value) {
-        //query_result_add(&myQuery, database->data[idx]);
-        //updateStudent("section", toDel, database->data[idx]);
-        //count++;
-      //}
-    //} else if (field == "birthday") {
-      //int day, mon, year;
-      //if (parse_selectors(value, day, mon, year)) {
-        //if ((day == database->data[idx].birthdate.tm_mday) 
-        //and (mon == database->data[idx].birthdate.tm_mon) 
-        //and (year == database->data[idx].birthdate.tm_year)) {
-          //query_result_add(&myQuery, database->data[idx]);
-          //updateStudent("section", toDel, database->data[idx]);
-          //count++;
-        //}
-      //}
-
-    //} else {
-      //cout << "ERROR WITH FIELD" << endl;
-    //}
-  //}
-
-  //if (count != 0) {
-    // on crée une nouvelle liste d'étudiants de la taille de la précédente moins le compteur
-    // (on soustrait le nombre d'étudiants à supprimer)
-    //student_t* growStudents = new student_t[database->psize - count];
-
-    //int ignored = 0;
-
-    //for (size_t i = 0; i < database->psize; i++) {
-      //if (database->data[i].section != toDel) {
-        //growStudents[i - ignored] = database->data[i];
-      //} else {
-        //ignored++;
-      //}
-    //}
-    //cout << "HERE" << endl;
-    //size_t grow = 0;
-    //for (size_t idx=0; idx < database->lsize; idx++) {
-      //if (database->data[idx].section == toDel) {
-      //}else {
-        //growStudents[grow] = database->data[idx];
-        //grow++;
-      //}
-    //}
-
-    ////delete []database->data;
-    //munmap(database->data, database->psize *(sizeof(student_t)));
-
-    //database->data = growStudents;
-    //database->lsize = database->lsize - count;
-  //}
 
 }
 
@@ -302,15 +221,8 @@ query_result_t deletion(database_t *database, string query) {
   string qu = "delete " + query;
   query_result_init(&myQuery, qu);
 
-  cout << "Avant delete " << database->lsize << endl;
-  for (int i = 0; i < 10; i++) {
-    cout << database->data[i].fname;
-  }
   deleteStudents(database, field, value, myQuery);
 
-
-
-  cout << "Après delete " << database->lsize << endl;
 
 
   struct timespec end;
@@ -341,30 +253,14 @@ bool getcommand(std::string &select, std::string &update, std::string &insert, s
   cout << "> ";
   getline(cin, commandLine);
   if (commandLine.substr(0, 11) == "transaction") {
-    //commandLine = "";
-    //int count = 0;
-    //while (commandLine.substr(0, 11) != "transaction" and count < 5) {
-      //cout << "> ";
-      //getline(cin, commandLine);
-      //if (!getType(commandLine, select, update, insert, del)){
-        //cout << "Please enter one of these instruction: "
-          //"select, update, insert, delete or transaction if you want to end the command " << endl;
-        //count ++;
-      //}
-    //}
-    //if (count == 4) {
-      //cout << "Sorry you have exceed the max attempt for an instruction" << endl;
-      //select = "";
-      //update = "";
-      //insert = "";
-      //del = "";
-      //return false;
-    //}
     transaction = "transaction";
     return true;
     
   }else if (getType(commandLine, select, update, insert, del)) {
     return true;
+  }
+  else if (commandLine == "") {
+    return false;
   }else {
     cout << "Please enter one of these instruction: "
     "select, update, insert, delete or transaction if you want to end the command " << endl;

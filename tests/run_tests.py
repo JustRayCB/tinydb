@@ -15,7 +15,7 @@ def check_log_content(logs, expected_lines):
     res = True
     for line in expected_lines:
         if line not in logs:
-            print('"%s" should be in the results but is not!')
+            print(f'{line} should be in the results but is not!')
             res = False
     return res
 

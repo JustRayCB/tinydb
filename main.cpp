@@ -72,11 +72,9 @@ int main(int argc, char const *argv[]) {
   db_init(db, allStudents);
   db_load(db, db_path);
 
-  isWorking(db);
+  //isWorking(db);
   pid_t father = getpid();
 
-
-  int count = 0 ; // Just pour donner une condition à while;
 
   //database_t *share = (database_t*)mmap(nullptr, sizeof(database_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
   //share = db;
@@ -97,31 +95,55 @@ int main(int argc, char const *argv[]) {
   
   if (!createProcess(selectSon, updateSon, insertSon, deleteSon)){ return 1;}
   //// faut utiliser fork
- while (count < 10) {
+ while (cin) {
     if (getpid() == father) {
       //FATHER WRITE
       string selectS = "", updateS = "", insertS = "", delS = "", transacS = "";
-      sleep(1);
-      isWorking(db);
+      //sleep(1);
+      usleep(500000); // sleep during 0.25 sec
+      //isWorking(db);
       getcommand(selectS, updateS, insertS, delS, transacS);
       if (selectS != "") {
+        while (tabStatus[0] == 0) {
+          cout << "Waiting for process Select to  finish" << endl;
+          usleep(250000); // sleep during 0.25 sec
+
+        }
         tabStatus[0] = 0;
         char real[256];
         strcpy(real, selectS.c_str());
         write(fdSelect[1], &real, 256);
         //close(fdSelect[1]);
       }if (updateS != "") {
+        while (tabStatus[2] == 0) {
+          cout << "Waiting for process Update to  finish" << endl;
+          usleep(250000); // sleep during 0.25 sec
+
+        }
+
         tabStatus[1] = 0;
         char real[256];
         strcpy(real, updateS.c_str());
         write(fdUpdate[1], &real, 256);
 
       }if (insertS != "") {
+        while (tabStatus[3] == 0) {
+          cout << "Waiting for process Insert to  finish" << endl;
+          usleep(250000); // sleep during 0.25 sec
+
+        }
+
         tabStatus[3] = 0;
         char real[256];
         strcpy(real, insertS.c_str());
         write(fdInsert[1], &real, 256);
       }if (delS != ""){
+        while (tabStatus[2] == 0) {
+          cout << "Waiting for process Delete  to  finish" << endl;
+          usleep(250000); // sleep during 0.25 sec
+
+        }
+
         tabStatus[2] = 0;
         char real[256];
         strcpy(real, delS.c_str());
@@ -144,7 +166,7 @@ int main(int argc, char const *argv[]) {
     else {
       //SON READ
       if (selectSon == 0) {
-        cout << "Select :  " << getpid() << " father : " << getppid() << endl;
+        //cout << "Select :  " << getpid() << " father : " << getppid() << endl;
         //cout << "SELECT" << endl;
         char got[256];
         close(fdSelect[1]);
@@ -161,7 +183,7 @@ int main(int argc, char const *argv[]) {
         tabStatus[0] = 1;
       }
       else if (updateSon == 0) {
-        cout << "UPDATE :  " << getpid() << " father : " << getppid() << endl;
+        //cout << "UPDATE :  " << getpid() << " father : " << getppid() << endl;
         //cout << "UPDATE" << endl;
         char got[256];
         close(fdUpdate[1]);
@@ -175,12 +197,11 @@ int main(int argc, char const *argv[]) {
         //sleep(15);
         delete [] ret.students;
         char buffer[256];student_to_str(buffer, &db->data[0]);
-        cout << "MODIFICATION UPDATE: " << buffer << endl;
         tabStatus[1] = 1;
 
       }
       else if (deleteSon == 0){
-        cout << "DELETE :  " << getpid() << " father : " << getppid() << endl;
+        //cout << "DELETE :  " << getpid() << " father : " << getppid() << endl;
         char got[256];
         //cout << "DELETE" << endl;
         close(fdDelete[1]);
@@ -188,13 +209,12 @@ int main(int argc, char const *argv[]) {
         string command = got;
         query_result_t ret;
         ret = deletion(db, command.substr(7, command.length()) );
-        cout << db->data[1].fname << endl;
         log_query(&ret);
         delete [] ret.students;
         tabStatus[2] = 1;
       }
       else if (insertSon == 0) {
-        cout << "INSERT :  " << getpid() << " father : " << getppid() << endl;
+        //cout << "INSERT :  " << getpid() << " father : " << getppid() << endl;
         char got[256];
         close(fdInsert[1]);
         read(fdInsert[0], &got, 256);
@@ -210,7 +230,8 @@ int main(int argc, char const *argv[]) {
 
     // Il y a sans doute des choses à faire ici...
   db_save(db, db_path);
-  delete [] db->data;
+  munmap(db->data, sizeof(student_t) * db->psize);
+  munmap(db, sizeof(database_t));
   printf("Bye bye!\n");
   return 0;
 }
