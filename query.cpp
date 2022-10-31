@@ -459,11 +459,12 @@ query_result_t insert(database_t* database, string query){
     string qu = "insert " + query;
     query_result_init(&myQuery, qu);
     
-    char* copy_query[256]; // Copie pour avoir un char* et pas const char*
-    strcpy(*copy_query, query.c_str());
-    strcpy(student.fname, strtok(*copy_query, &espace));  // recopiage student->fname
+    char copy_query[256]; // Copie pour avoir un char* et pas const char*
+    strcpy(copy_query, query.c_str());
+    strcpy(student.fname, strtok(copy_query, &espace));  // recopiage student->fname
     strcpy(student.lname, strtok(NULL, &espace));  // recopiage student->lname
-    student.id = atoi(strtok(NULL, &espace));  // recopiage student->id
+    //student.id = atoi(strtok(NULL, &espace));  // recopiage student->id Problème premier appel à insert
+    student.id = (unsigned)stoi(strtok(NULL, &espace));  // recopiage student->id
     
     // Check if ID already in database
     for(size_t i = 0; i < database->lsize;i++){
@@ -475,11 +476,15 @@ query_result_t insert(database_t* database, string query){
     }
     strcpy(student.section, strtok(NULL, &espace));  // recopiage student->section
     strptime(strtok(NULL, &espace), "%e/%m/%Y" ,&student.birthdate);  // recopiage student->birthdate
-    strcpy(*copy_query, query.c_str());  // reset le pointeur au debut de la query
+    strcpy(copy_query, query.c_str());  // reset le pointeur au debut de la query
     
-    if(!parse_insert(*copy_query, student.fname, student.lname, &student.id, student.section, &student.birthdate)){
+    if(!parse_insert(copy_query, student.fname, student.lname, &student.id, student.section, &student.birthdate)){
       cout << "Problem with the query insert" << endl;
       myQuery.status = QUERY_FAILURE;
+      struct timespec end;
+      clock_gettime(CLOCK_REALTIME, &end);
+      myQuery.end_ns = end.tv_nsec + 1e9 *end.tv_sec;
+      return myQuery;
     }
     // reussi, on sauvegarde
     myQuery.students[0] = student;
