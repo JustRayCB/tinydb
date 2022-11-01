@@ -22,6 +22,7 @@ then
             if [[ -f $QUERIES ]]
             then
                 echo "On lance le programme avec queries"
+                ./tinydb $PATH_TO_DB $QUERIES
             else
                 echo "Le fichier texte n'existe pas"
             fi
@@ -78,17 +79,37 @@ elif [[ $TO_LAUNCH == "shutdown" ]]
 then
     echo "On est dans shutdown"
     PID=$2
+    ALL_INSTANCES=$(pgrep tinydb)
+    INSTANCE_COUNT=$(pgrep tinydb -c)
+    
+    COUNT=0
+
+    
 
     if [[ $PID == "" ]]
     then
         #on devra demander pour chaque pid père si on veut le shutdown
-        echo "yo"
+        for pid in $ALL_INSTANCES
+        do
+            if ! ((COUNT%5))
+            then
+                COUNT=$((COUNT+1))
+                #si c'est un processus principal
+                echo "Voulez-vous terminer le processus $pid?(y/n)"
+                read choice
+
+                if [[ $choice == "y" ]]
+                then
+                    INSTANCES_TO_KILL+=($pid)
+                fi  
+            else
+                COUNT=$((COUNT+1))
+            fi
+        done
+        for pid_to_kill in ${INSTANCES_TO_KILL[@]}; do
+            kill -- -$pid_to_kill
+        done
     else    
-        ALL_INSTANCES=$(pgrep tinydb)
-        INSTANCE_COUNT=$(pgrep tinydb -c)
-        echo "$INSTANCE_COUNT"
-        
-        COUNT=0
         for pid in $ALL_INSTANCES
         do
             if ! ((COUNT % 5))
@@ -96,8 +117,8 @@ then
                 COUNT=$((COUNT+1))
                 if [[ $pid == $PID ]]
                 then
-                    #si c'est un processus principal
-                    kill -SIGINT $PID
+                    #si c'est un processus principal on kill le groupe associé
+                    kill -- -$PID
                     break
                 fi
             else
