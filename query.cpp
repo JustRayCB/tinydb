@@ -250,6 +250,7 @@ bool getType(std::string &command, std::string &select, std::string &update, std
 
 bool getcommand(std::string &select, std::string &update, std::string &insert, std::string &del, std::string &transaction){
   string commandLine;
+  usleep(250000);
   cout << "> ";
   getline(cin, commandLine);
   if (commandLine.substr(0, 11) == "transaction") {

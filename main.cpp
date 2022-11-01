@@ -1,5 +1,7 @@
+#include <bits/types/struct_tm.h>
 #include <csignal>
 #include <cstddef>
+#include <string>
 #include <sys/mman.h>
 #include <cstdlib>
 #include <cstring>
@@ -10,6 +12,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/wait.h>
+#include <cstdlib>
 
 
 #include "db.hpp"
@@ -18,6 +21,8 @@
 #include "utils.hpp"
 
 using namespace std;
+
+int sigint = 1;
 
 void isWorking(database_t *db){
   char buffer[512];
@@ -39,17 +44,33 @@ void isWorking(database_t *db){
 }
 
 void signalHandler(int signum) {
-   cout << "Ici on devrait save la db" << endl;
-   exit(signum);
+   if (signum == SIGINT) {
+     // DOIT ARRETER LES PROCESS ET SAVE LA DB;
+     cout <<  endl << "Handling SIGINT signal ... "<< endl;
+     fclose(stdin);
+     sigint = 0;
+   }else if (signum == SIGUSR1) {
+     //doit save la db
+     sigint = 2;
+     cout << "Please press enter " << endl;
+
+   }
+   //exit(signum);
 }
 
 
 int main(int argc, char const *argv[]) {
 
   //SIGUSR1 POUR MONITORING SYNC
-  signal(SIGUSR1, signalHandler);
 
   const char *db_path = argv[argc-1];
+  string tmp = std::string(db_path);
+  cout << tmp << endl;
+  if (tmp.substr(tmp.size()-4, tmp.size()) != ".bin" ) {
+    cout << "You should pass a binary file for the database " << endl;
+    return 1;
+
+  }
 
   //MEMOIRE PARTAGEE
   size_t allStudents = getNumberStudent(db_path);
@@ -76,6 +97,7 @@ int main(int argc, char const *argv[]) {
   pid_t father = getpid();
 
 
+
   //database_t *share = (database_t*)mmap(nullptr, sizeof(database_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
   //share = db;
   //if (share == MAP_FAILED) {
@@ -95,14 +117,29 @@ int main(int argc, char const *argv[]) {
   
   if (!createProcess(selectSon, updateSon, insertSon, deleteSon)){ return 1;}
   //// faut utiliser fork
- while (cin) {
+  if (getpid() == father) {
+      signal(SIGINT, signalHandler);
+      signal(SIGUSR1, signalHandler);
+  }
+ while (cin and sigint) {
     if (getpid() == father) {
       //FATHER WRITE
       string selectS = "", updateS = "", insertS = "", delS = "", transacS = "";
       //sleep(1);
       usleep(500000); // sleep during 0.25 sec
       //isWorking(db);
+      if (sigint == 2) {
+        while (tabStatus[0] == 0 or tabStatus[1] == 0 or tabStatus[2] == 0 or tabStatus[3] == 0) {
+          cout << "Waiting for process to  finish" << endl;
+          usleep(250000); // sleep during 0.25 sec
+        }
+        cout << "Saving database to the disk ..." << endl;
+        db_save(db, db_path);
+        cout << "Done ..." << endl;
+        sigint = 1;
+      }
       getcommand(selectS, updateS, insertS, delS, transacS);
+
       if (selectS != "") {
         while (tabStatus[0] == 0) {
           cout << "Waiting for process Select to  finish" << endl;
@@ -227,8 +264,15 @@ int main(int argc, char const *argv[]) {
       }  
     }
   }
+  if (!sigint) {
+        while (tabStatus[0] == 0 or tabStatus[1] == 0 or tabStatus[2] == 0 or tabStatus[3] == 0) {
+          cout << "Waiting for process to  finish" << endl;
+          usleep(250000); // sleep during 0.25 sec
+        }
+  }
 
     // Il y a sans doute des choses à faire ici...
+  cout << "Saving the database to the disk" << endl;
   db_save(db, db_path);
   munmap(db->data, sizeof(student_t) * db->psize);
   munmap(db, sizeof(database_t));
