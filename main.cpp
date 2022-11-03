@@ -12,7 +12,6 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/wait.h>
-#include <cstdlib>
 
 
 #include "db.hpp"
@@ -78,13 +77,35 @@ int main(int argc, char const *argv[]) {
   // mémoire partagée
   // Si on y met l'address de la db on "essaye" de forcer l'os à mettre la
   // mémoire partagée là ou il y la db
-  database_t *db= (database_t*)mmap(nullptr, sizeof(database_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-  db->data = (student_t*)mmap(nullptr, sizeof(student_t)*allStudents*2, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0); 
+  //database_t *db= (database_t*)mmap(nullptr, sizeof(database_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+  //db->data = (student_t*)mmap(nullptr, sizeof(student_t)*allStudents*2, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0); 
+  void *ptrDb = mmap(nullptr, sizeof(database_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+  void *ptrData = mmap(nullptr, sizeof(student_t)*allStudents*2, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+
+  if (ptrDb == MAP_FAILED) {
+    perror("mmap Db");
+    return 1;
+  }
+  if (ptrData == MAP_FAILED) {
+    perror("mmap data");
+    return 1;
+  }
+
+  database_t *db = (database_t*) ptrDb;
+  db->data = (student_t*) ptrData;
+
   //cout << sizeof(*db) << endl;
 
   // tableau pour savoir si un processus à terminé de faire son travail:: 0 en train de travailler
   // 1 finis de travailler
-  unsigned *tabStatus = (unsigned*)mmap(nullptr, sizeof(unsigned)*4, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0); 
+  //unsigned *tabStatus = (unsigned*)mmap(nullptr, sizeof(unsigned)*4, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0); 
+  void *ptrTab = mmap(nullptr, sizeof(unsigned)*4, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+  if (ptrTab == MAP_FAILED) {
+    perror("mmap tabStatus");
+    return 1;
+  }
+  unsigned *tabStatus = (unsigned*) ptrTab;
+
   tabStatus[0] = 1; //SELECT 
   tabStatus[1] = 1; //UPDATE
   tabStatus[2] = 1; //DELETE
@@ -93,17 +114,7 @@ int main(int argc, char const *argv[]) {
   db_init(db, allStudents);
   db_load(db, db_path);
 
-  //isWorking(db);
   pid_t father = getpid();
-
-
-
-  //database_t *share = (database_t*)mmap(nullptr, sizeof(database_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-  //share = db;
-  //if (share == MAP_FAILED) {
-    //cout << "ERROR WITH MMAP" << endl;
-    //return 4;
-  //}
 
   // CREATION DES FD:
   int fdSelect[2], fdUpdate[2], fdDelete[2], fdInsert[2];
@@ -116,18 +127,19 @@ int main(int argc, char const *argv[]) {
   if (pipe(fdInsert) < 0) {perror("Pipes() Insert");}
   
   if (!createProcess(selectSon, updateSon, insertSon, deleteSon)){ return 1;}
-  //// faut utiliser fork
+
+  //Handling of signals
   if (getpid() == father) {
       signal(SIGINT, signalHandler);
       signal(SIGUSR1, signalHandler);
   }
+
  while (cin and sigint) {
     if (getpid() == father) {
-      //FATHER WRITE
+      //FATHER
       string selectS = "", updateS = "", insertS = "", delS = "", transacS = "";
-      //sleep(1);
-      usleep(500000); // sleep during 0.25 sec
-      //isWorking(db);
+
+      usleep(500000); // sleep during 0.5 sec
       if (sigint == 2) {
         while (tabStatus[0] == 0 or tabStatus[1] == 0 or tabStatus[2] == 0 or tabStatus[3] == 0) {
           cout << "Waiting for process to  finish" << endl;
