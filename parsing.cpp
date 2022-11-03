@@ -138,7 +138,7 @@ bool parse_selectors(string &query, int &day, int &mon, int &year){
     if (!getline(X, token, '/')){
         return false;
     }
-    mon = stoul(token, nullptr, 10);
+    mon = stoul(token, nullptr, 10) -1; // Parce que c'est décalé de 1 dans tm_mon
 
     if (!getline(X, token, '/')){
         return false;

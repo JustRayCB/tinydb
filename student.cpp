@@ -11,7 +11,7 @@
 void student_to_str(char* buffer, student_t* s) {
   std::string myBuffer;
   myBuffer = std::to_string(s->id) + ": " + std::string(s->fname) + " " + std::string(s->lname) + " in section " + std::string(s->section)
-    + ", born on the " + std::to_string(s->birthdate.tm_mday) + "/" + std::to_string(s->birthdate.tm_mon) + "/"
+    + ", born on the " + std::to_string(s->birthdate.tm_mday) + "/" + std::to_string(s->birthdate.tm_mon + 1) + "/"
     + std::to_string(s->birthdate.tm_year+1900);
   strcpy(buffer, myBuffer.c_str());
 
