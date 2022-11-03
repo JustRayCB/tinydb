@@ -21,7 +21,7 @@ then
             then
                 ./tinydb $PATH_TO_DB $QUERIES
             else
-                err "Le fichier texte n'existe pas"
+                err "Le fichier de requêtes n'existe pas"
             fi
         fi
     else
@@ -33,9 +33,11 @@ then
 elif [[ $TO_LAUNCH == "status" ]]
 then
     INSTANCE_COUNT=$(pgrep tinydb -c)
+    #On a le nombre total d'instances en cours, il faut enlever les fils de chaque père
     INSTANCE_COUNT=$((INSTANCE_COUNT/5))
     echo "$INSTANCE_COUNT instance(s) running"
     ALL_INSTANCES=$(pgrep tinydb)
+    #Compteur pour voir si on est sur un fils ou un père
     COUNT=0
     for pid in $ALL_INSTANCES
     do
@@ -47,8 +49,6 @@ then
             COUNT=$((COUNT+1))
         fi
     done
-    
-
 elif [[ $TO_LAUNCH == "sync" ]]
 then
     INSTANCE_COUNT=$(pgrep tinydb -c)
@@ -67,17 +67,12 @@ then
         fi
     done
     echo "Done"
-
-
-
 elif [[ $TO_LAUNCH == "shutdown" ]]
 then
     PID=$2
     ALL_INSTANCES=$(pgrep tinydb)
     INSTANCE_COUNT=$(pgrep tinydb -c)
-    
     COUNT=0
-
     if [[ $PID == "" ]]
     then
         #on devra demander pour chaque pid père si on veut le shutdown
@@ -125,7 +120,6 @@ then
             err "Le pid donné n'existe pas ou n'est pas celui d'un processus père"
         fi
     fi
-
 else
     err "Mauvaise utilisation!\nUtilisez : './monitoring <opt> [chemin_vers_db] [fichier_requetes]'\n<opt>=run|status|sync|shutdown\nLes crochets signifient que les arguments sont optionnels."
 fi
