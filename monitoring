@@ -28,7 +28,7 @@ then
         #soit le fichier n'existe pas
         mkdir data
         touch $PATH_TO_DB
-        err "Le chemin vers la db n'existe pas"
+        err "Le chemin vers la base de données n'existe pas"
     fi
 elif [[ $TO_LAUNCH == "status" ]]
 then
@@ -78,8 +78,6 @@ then
     
     COUNT=0
 
-    
-
     if [[ $PID == "" ]]
     then
         #on devra demander pour chaque pid père si on veut le shutdown
@@ -103,10 +101,6 @@ then
                 COUNT=$((COUNT+1))
             fi
         done
-        # for pid_to_kill in ${INSTANCES_TO_KILL[@]}; do
-        #     echo "$pid_to_kill"
-        #     kill -- $pid_to_kill
-        # done
     else
         found=false
         for pid in $ALL_INSTANCES
@@ -133,5 +127,5 @@ then
     fi
 
 else
-    echo -e "Mauvaise utilisation!\nUtilisez : './monitoring opt [chemin_vers_db] [fichier_requetes]'\nopt=run ou status ou sync ou shutdown\nLes crochets signifient que les arguments sont optionnels"
+    err "Mauvaise utilisation!\nUtilisez : './monitoring <opt> [chemin_vers_db] [fichier_requetes]'\n<opt>=run|status|sync|shutdown\nLes crochets signifient que les arguments sont optionnels."
 fi
