@@ -82,8 +82,7 @@ then
             then
                 COUNT=$((COUNT+1))
                 #si c'est un processus principal
-                echo "Voulez-vous terminer le processus $pid?(y/n)"
-                read choice
+                read -p "Voulez-vous terminer le processus $pid? (y/n) : " choice
 
                 if [[ $choice == "y" ]]
                 then
