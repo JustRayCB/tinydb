@@ -5,6 +5,10 @@
 #include <stdlib.h>
 
 #include "query.hpp"
+#include "select.hpp"
+#include "update.hpp"
+#include "delete.hpp"
+#include "insert.hpp"
 
 /**
  * @brief Effectue un `read` en vérifiant la valeur de retour.
@@ -37,4 +41,8 @@ void log_query(query_result_t *result);
 
 size_t getNumberStudent(const char *path);
 
+bool getCommand(Select &mySelect, Update &myUpdate, Insert &myInsert, Delete &myDelete, std::string &transaction);
+bool getType(std::string &command, Select &mySelect, Update &myUpdate, Insert &myInsert, Delete &myDelete);
+
+bool createProcess(Select &mySelect, Update &myUpdate, Insert &myInsert, Delete &myDelete);
 #endif  // _UTILS_H

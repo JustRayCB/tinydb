@@ -233,41 +233,6 @@ query_result_t deletion(database_t *database, string query) {
 }
 
 
-bool getType(std::string &command, std::string &select, std::string &update, std::string &insert, std::string &del){
-  if (command.substr(0, 6) == "select") {
-    select = command;
-  }else if (command.substr(0, 6) == "update") {
-    update = command;
-  }else if (command.substr(0, 6) == "insert") {
-    insert = command;
-  }else if (command.substr(0, 6) == "delete"){
-    del = command;
-  }else {
-    return false;
-  }
-  return true;
-}
-
-bool getcommand(std::string &select, std::string &update, std::string &insert, std::string &del, std::string &transaction){
-  string commandLine;
-  usleep(250000);
-  cout << "> ";
-  getline(cin, commandLine);
-  if (commandLine.substr(0, 11) == "transaction") {
-    transaction = "transaction";
-    return true;
-    
-  }else if (getType(commandLine, select, update, insert, del)) {
-    return true;
-  }
-  else if (commandLine == "") {
-    return false;
-  }else {
-    cout << "Please enter one of these instruction: "
-    "select, update, insert, delete or transaction if you want to end the command " << endl;
-    return false;
-  }
-}
 
 
 query_result_t select(database_t *database, string query){
@@ -324,29 +289,6 @@ query_result_t update(database_t *database, string query){
 
 }
 
-bool createProcess(pid_t &selectSon, pid_t &updateSon, pid_t &insertSon, pid_t &deleteSon){
- 
-  selectSon = fork();
-  if (selectSon < 0) { perror("Fork() Select"); return false;}
-  else if (!selectSon) {/*IN SELECT SON PROCESS*/ /*cout << "Select : " << getpid() << " père : " << getppid()<< endl;*/}
-  else {/*IN PARENT PROCESS*/
-    updateSon = fork();
-    if (updateSon < 0) {perror("fork() Update"); return false;}
-    else if (!updateSon) {/*IN UPDATE SON PROCESS*/  /*cout << "Update : " << getpid() << " père : " << getppid()<< endl;*/}    
-    else { //[>IN PARENT PROCESS<]
-      deleteSon = fork();
-      if (deleteSon < 0) {perror("fork() Delete"); return false;}
-      else if (!deleteSon) {/*[>IN DELETE SON PROCESS<]  cout << "Delete : " << getpid() << " père : " << getppid()<< endl;*/}    
-      else {//[>IN PARENT PROCESS<]
-        insertSon = fork();
-        if (insertSon < 0) {perror("fork() Insert"); return false;}
-        else if (!insertSon) {/*[>IN INSERT SON PROCESS<]  cout << "Insert : " << getpid() << " père : " << getppid()<< endl;*/}
-      }
-    }
-  }
-  return true;
-
-}
 query_result_t insert(database_t* database, string query){
     const char espace = ' ';
     query_result_t myQuery;

@@ -1,5 +1,5 @@
-#ifndef _QUERY_H
-#define _QUERY_H
+#ifndef _QUERY_HPP
+#define _QUERY_HPP
 #include <string>
 #include <vector>
 
@@ -47,10 +47,10 @@ void updateStudent(const std::string &f_update, std::string &v_update, student_t
 query_result_t deletion(database_t *database, std::string query);
 void deleteStudents(database_t *database, std::string field, std::string value, query_result_t &myQuery);
 
-bool getcommand(std::string &select, std::string &update, std::string &insert, std::string &del, std::string &transaction);
-bool getType(std::string &command, std::string &select, std::string &update, std::string &insert, std::string &del);
+//bool getcommand(std::string &select, std::string &update, std::string &insert, std::string &del, std::string &transaction);
+//bool getType(std::string &command, std::string &select, std::string &update, std::string &insert, std::string &del);
 
-bool createProcess(pid_t &selectSon, pid_t &updateSon, pid_t &insertSon, pid_t &deleteSon);
+//bool createProcess(pid_t &selectSon, pid_t &updateSon, pid_t &insertSon, pid_t &deleteSon);
 
 void swapStudent(database_t *database, size_t &idx, size_t &newSize);
 #endif
