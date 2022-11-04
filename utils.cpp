@@ -9,6 +9,10 @@
 
 #include "query.hpp"
 #include "student.hpp"
+#include "select.hpp"
+#include "update.hpp"
+#include "delete.hpp"
+#include "insert.hpp"
 
 using namespace std;
 
@@ -97,5 +101,68 @@ size_t getNumberStudent(const char *path){
     std::cout << "Preshot nb étudiants : len file / len sutdent = " << in.tellg() / sizeof(student_t) << std::endl;
 
     return size;
+
+}
+
+bool getType(std::string &command, Select &mySelect, Update &myUpdate, Insert &myInsert, Delete &myDelete){
+  if (command.substr(0, 6) == "select") {
+    //select = command;
+    mySelect.setString(command);
+  }else if (command.substr(0, 6) == "update") {
+    myUpdate.setString(command);
+  }else if (command.substr(0, 6) == "insert") {
+    myInsert.setString(command);
+  }else if (command.substr(0, 6) == "delete"){
+    myDelete.setString(command);
+  }else {
+    return false;
+  }
+  return true;
+}
+
+
+bool getCommand(Select &mySelect, Update &myUpdate, Insert &myInsert, Delete &myDelete, std::string &transaction){
+  string commandLine;
+  usleep(250000);
+  cout << "> ";
+  getline(cin, commandLine);
+  if (commandLine.substr(0, 11) == "transaction") {
+    transaction = "transaction";
+    return true;
+    
+  }else if (getType(commandLine, mySelect, myUpdate, myInsert, myDelete)) {
+    return true;
+  }
+  else if (commandLine == "") {
+    return false;
+  }else {
+    cout << "Please enter one of these instruction: "
+    "select, update, insert, delete or transaction if you want to end the command " << endl;
+    return false;
+  }
+}
+
+
+ 
+bool createProcess(Select &mySelect, Update &myUpdate, Insert &myInsert, Delete &myDelete){
+  mySelect.setPid(fork());
+  if (mySelect.getPid() < 0) { perror("Fork() Select"); return false;}
+  else if (!mySelect.getPid()) {/*IN SELECT SON PROCESS*/ /*cout << "Select : " << getpid() << " père : " << getppid()<< endl;*/}
+  else {/*IN PARENT PROCESS*/
+    myUpdate.setPid(fork());
+    if (myUpdate.getPid() < 0) {perror("fork() Update"); return false;}
+    else if (!myUpdate.getPid()) {/*IN UPDATE SON PROCESS*/  /*cout << "Update : " << getpid() << " père : " << getppid()<< endl;*/}    
+    else { //[>IN PARENT PROCESS<]
+      myDelete.setPid(fork());
+      if (myDelete.getPid() < 0) {perror("fork() Delete"); return false;}
+      else if (!myDelete.getPid()) {/*[>IN DELETE SON PROCESS<]  cout << "Delete : " << getpid() << " père : " << getppid()<< endl;*/}    
+      else {//[>IN PARENT PROCESS<]
+        myInsert.setPid(fork());
+        if (myInsert.getPid() < 0) {perror("fork() Insert"); return false;}
+        else if (!myInsert.getPid()) {/*[>IN INSERT SON PROCESS<]  cout << "Insert : " << getpid() << " père : " << getppid()<< endl;*/}
+      }
+    }
+  }
+  return true;
 
 }

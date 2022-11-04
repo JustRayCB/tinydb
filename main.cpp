@@ -18,6 +18,10 @@
 #include "student.hpp"
 #include "query.hpp"
 #include "utils.hpp"
+#include "update.hpp"
+#include "delete.hpp"
+#include "insert.hpp"
+#include "select.hpp"
 
 using namespace std;
 
@@ -43,10 +47,10 @@ void isWorking(database_t *db){
 }
 
 void signalHandler(int signum) {
-   if (signum == SIGINT) {
+   if (signum == SIGINT) { //^C
      // DOIT ARRETER LES PROCESS ET SAVE LA DB;
      cout <<  endl << "Handling SIGINT signal ... "<< endl;
-     fclose(stdin);
+     //fclose(stdin);
      sigint = 0;
    }else if (signum == SIGUSR1) {
      //doit save la db
@@ -77,11 +81,8 @@ int main(int argc, char const *argv[]) {
   // mémoire partagée
   // Si on y met l'address de la db on "essaye" de forcer l'os à mettre la
   // mémoire partagée là ou il y la db
-  //database_t *db= (database_t*)mmap(nullptr, sizeof(database_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-  //db->data = (student_t*)mmap(nullptr, sizeof(student_t)*allStudents*2, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0); 
   void *ptrDb = mmap(nullptr, sizeof(database_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
   void *ptrData = mmap(nullptr, sizeof(student_t)*allStudents*2, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-
   if (ptrDb == MAP_FAILED) {
     perror("mmap Db");
     return 1;
@@ -94,11 +95,9 @@ int main(int argc, char const *argv[]) {
   database_t *db = (database_t*) ptrDb;
   db->data = (student_t*) ptrData;
 
-  //cout << sizeof(*db) << endl;
 
   // tableau pour savoir si un processus à terminé de faire son travail:: 0 en train de travailler
   // 1 finis de travailler
-  //unsigned *tabStatus = (unsigned*)mmap(nullptr, sizeof(unsigned)*4, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0); 
   void *ptrTab = mmap(nullptr, sizeof(unsigned)*4, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
   if (ptrTab == MAP_FAILED) {
     perror("mmap tabStatus");
@@ -117,173 +116,144 @@ int main(int argc, char const *argv[]) {
   pid_t father = getpid();
 
   // CREATION DES FD:
-  int fdSelect[2], fdUpdate[2], fdDelete[2], fdInsert[2];
-  // CREATION PID
-  pid_t selectSon = 1, updateSon = 1, deleteSon = 1, insertSon = 1;
-
-  if (pipe(fdSelect) < 0) {perror("Pipes() Select");}
-  if (pipe(fdUpdate) < 0) {perror("Pipes() Update");}
-  if (pipe(fdDelete) < 0) {perror("Pipes() Delete");}
-  if (pipe(fdInsert) < 0) {perror("Pipes() Insert");}
+  Select mySelect;
+  Delete myDelete;
+  Insert myInsert;
+  Update myUpdate;
   
-  if (!createProcess(selectSon, updateSon, insertSon, deleteSon)){ return 1;}
+
+  if (mySelect.openPipe()) {return 1;}
+  if (myDelete.openPipe()) {return 1;}
+  if (myUpdate.openPipe()) {return 1;}
+  if (myInsert.openPipe()) {return 1;}
+  
+  if (!createProcess(mySelect, myUpdate, myInsert, myDelete)){ return 1;}
 
   //Handling of signals
   if (getpid() == father) {
       signal(SIGINT, signalHandler);
       signal(SIGUSR1, signalHandler);
   }
+  else {
+    signal(SIGINT, SIG_IGN);
+  }
 
  while (cin and sigint) {
     if (getpid() == father) {
       //FATHER
-      string selectS = "", updateS = "", insertS = "", delS = "", transacS = "";
+      string /*selectS = "", updateS = "", insertS = "", delS = "",*/ transacS = "";
 
       usleep(500000); // sleep during 0.5 sec
       if (sigint == 2) {
-        while (tabStatus[0] == 0 or tabStatus[1] == 0 or tabStatus[2] == 0 or tabStatus[3] == 0) {
-          cout << "Waiting for process to  finish" << endl;
-          usleep(250000); // sleep during 0.25 sec
-        }
+        mySelect.waitSelect(tabStatus[0]);
+        myUpdate.waitUpdate(tabStatus[1]);
+        myDelete.waitDelete(tabStatus[2]);
+        myInsert.waitInsert(tabStatus[3]);
+
         cout << "Saving database to the disk ..." << endl;
         db_save(db, db_path);
         cout << "Done ..." << endl;
         sigint = 1;
       }
-      getcommand(selectS, updateS, insertS, delS, transacS);
+      getCommand(mySelect, myUpdate, myInsert, myDelete, transacS);
 
-      if (selectS != "") {
-        while (tabStatus[0] == 0) {
-          cout << "Waiting for process Select to  finish" << endl;
-          usleep(250000); // sleep during 0.25 sec
-
-        }
+      if (mySelect.getString() != "") {
+        mySelect.waitSelect(tabStatus[0]);
         tabStatus[0] = 0;
-        char real[256];
-        strcpy(real, selectS.c_str());
-        write(fdSelect[1], &real, 256);
-        //close(fdSelect[1]);
-      }if (updateS != "") {
-        while (tabStatus[2] == 0) {
-          cout << "Waiting for process Update to  finish" << endl;
-          usleep(250000); // sleep during 0.25 sec
+        mySelect.writePipe();
+        mySelect.setString("");
 
-        }
-
+      }if (myUpdate.getString() != "") {
+        myUpdate.waitUpdate(tabStatus[1]);
         tabStatus[1] = 0;
-        char real[256];
-        strcpy(real, updateS.c_str());
-        write(fdUpdate[1], &real, 256);
+        myUpdate.writePipe();
+        myUpdate.setString("");
 
-      }if (insertS != "") {
-        while (tabStatus[3] == 0) {
-          cout << "Waiting for process Insert to  finish" << endl;
-          usleep(250000); // sleep during 0.25 sec
-
-        }
-
+      }if (myInsert.getString() != "") {
+        myInsert.waitInsert(tabStatus[3]);
         tabStatus[3] = 0;
-        char real[256];
-        strcpy(real, insertS.c_str());
-        write(fdInsert[1], &real, 256);
-      }if (delS != ""){
-        while (tabStatus[2] == 0) {
-          cout << "Waiting for process Delete  to  finish" << endl;
-          usleep(250000); // sleep during 0.25 sec
-
-        }
-
+        myInsert.writePipe();
+        myInsert.setString("");
+      }if (myDelete.getString() != ""){
+        myDelete.waitDelete(tabStatus[2]);
         tabStatus[2] = 0;
-        char real[256];
-        strcpy(real, delS.c_str());
-        write(fdDelete[1], &real, 256);
+        myDelete.writePipe();
+        myDelete.setString("");
+
       }if (transacS != "") {
-        cout << "tab[";
-        for (int idx = 0; idx <4; idx++) {
-          cout << tabStatus[idx] <<", ";
+        mySelect.waitSelect(tabStatus[0]);
+        myUpdate.waitUpdate(tabStatus[1]);
+        myDelete.waitDelete(tabStatus[2]);
+        myInsert.waitInsert(tabStatus[3]);
 
-        }
-        cout << "]" << endl;
-
-        while (tabStatus[0] == 0 or tabStatus[1] == 0 or tabStatus[2] == 0 or tabStatus[3] == 0) {
-          cout << "Waiting for process to  finish" << endl;
-          usleep(250000); // sleep during 0.25 sec
-        }
       }
 
     }
     else {
       //SON READ
-      if (selectSon == 0) {
-        //cout << "Select :  " << getpid() << " father : " << getppid() << endl;
-        //cout << "SELECT" << endl;
-        char got[256];
-        close(fdSelect[1]);
-        read(fdSelect[0], &got, 256);
-        //cout <<"I have received " <<  got << endl;
-        //close(fdSelect[1]);
-        string command = got;
-        //cout << "C'est le process : " << getpid() << " qui fait ça et le père est : " << getppid() << endl;
+      if (mySelect.getPid() == 0) {
+        cout << "Select :  " << getpid() << " father : " << getppid() << endl;
+        mySelect.readPipe();
+        string command = mySelect.getFromPipe();
         query_result_t ret;
-        ret = select(db, command.substr(7, command.length()));
-        //sleep(10);
+        ret = mySelect.selectFunc(db, command.substr(7, command.length()));
         log_query(&ret);
-        delete [] ret.students;
+        if (ret.status != QUERY_FAILURE) {
+          delete [] ret.students;
+        }
+        sleep(10);
         tabStatus[0] = 1;
       }
-      else if (updateSon == 0) {
-        //cout << "UPDATE :  " << getpid() << " father : " << getppid() << endl;
-        //cout << "UPDATE" << endl;
-        char got[256];
-        close(fdUpdate[1]);
-        read(fdUpdate[0], &got, 256);
-        //cout << "I have received " << got << endl;
-        string command = got;
-        //cout << "C'est le process : " << getpid() << " qui fait ça et le père est : " << getppid() << endl;
+      else if (myUpdate.getPid() == 0) {
+        cout << "UPDATE :  " << getpid() << " father : " << getppid() << endl;
+        myUpdate.readPipe();
+        string command = myUpdate.getFromPipe();
         query_result_t ret;
-        ret = update(db, command.substr(7, command.length()) );
+        ret = myUpdate.updateFunc(db, command.substr(7, command.length()) );
         log_query(&ret);
         //sleep(15);
-        delete [] ret.students;
-        char buffer[256];student_to_str(buffer, &db->data[0]);
+        if (ret.status != QUERY_FAILURE) {
+          delete [] ret.students;
+        }
+
+        sleep(10);
         tabStatus[1] = 1;
 
       }
-      else if (deleteSon == 0){
-        //cout << "DELETE :  " << getpid() << " father : " << getppid() << endl;
-        char got[256];
-        //cout << "DELETE" << endl;
-        close(fdDelete[1]);
-        read(fdDelete[0], &got, 256);
-        string command = got;
+      else if (myDelete.getPid()== 0){
+        cout << "DELETE :  " << getpid() << " father : " << getppid() << endl;
+        myDelete.readPipe();
+        string command = myDelete.getFromPipe();
         query_result_t ret;
-        ret = deletion(db, command.substr(7, command.length()) );
+        ret = myDelete.deleteFunc(db, command.substr(7, command.length()) );
         log_query(&ret);
-        delete [] ret.students;
+        if (ret.status != QUERY_FAILURE) {
+          delete [] ret.students;
+        }
         tabStatus[2] = 1;
       }
-      else if (insertSon == 0) {
-        //cout << "INSERT :  " << getpid() << " father : " << getppid() << endl;
-        char got[256];
-        close(fdInsert[1]);
-        read(fdInsert[0], &got, 256);
-        string command = got;
+      else if (myInsert.getPid() == 0) {
+        cout << "INSERT :  " << getpid() << " father : " << getppid() << endl;
+        myInsert.readPipe();
+        string command = myInsert.getFromPipe();
         query_result_t ret;
-        ret = insert(db, command.substr(7, command.length()) );
+        ret = myInsert.insertFunc(db, command.substr(7, command.length()) );
         log_query(&ret);
-        delete [] ret.students;
+        if (ret.status != QUERY_FAILURE) {
+          delete [] ret.students;
+        }
         tabStatus[3] = 1;
       }  
     }
   }
   if (!sigint) {
-        while (tabStatus[0] == 0 or tabStatus[1] == 0 or tabStatus[2] == 0 or tabStatus[3] == 0) {
-          cout << "Waiting for process to  finish" << endl;
-          usleep(250000); // sleep during 0.25 sec
-        }
+    cout << "Here whit pid : " << getpid() << endl;
+        mySelect.waitSelect(tabStatus[0]);
+        myUpdate.waitUpdate(tabStatus[1]);
+        myDelete.waitDelete(tabStatus[2]);
+        myInsert.waitInsert(tabStatus[3]);
   }
 
-    // Il y a sans doute des choses à faire ici...
   cout << "Saving the database to the disk" << endl;
   db_save(db, db_path);
   munmap(db->data, sizeof(student_t) * db->psize);
