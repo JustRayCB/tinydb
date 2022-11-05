@@ -1,7 +1,7 @@
 #!/bin/bash
 
 err(){
-    echo -e "\e[1;31m E: $* \e[0m" >> /dev/stderr
+    echo -e "\e[1;31mE: $* \e[0m" >> /dev/stderr
 }
 
 TO_LAUNCH=$1
@@ -9,17 +9,25 @@ TO_LAUNCH=$1
 if [[ $TO_LAUNCH == "run" ]]
 then
     PATH_TO_DB=${2:-data/students.bin}
-    QUERIES=$3
+    FLAG=$3
+    QUERIES=$4
     #soit le fichier existe
     if [[ -f "$PATH_TO_DB" ]]
     then
         if [[ $QUERIES == "" ]]
         then
+            if [[ $FLAG == "-f" ]]
+            then
+                err "Le fichier de requêtes n'existe pas"
+            fi
             ./tinydb $PATH_TO_DB
+            #afficher le pid du processus principal
+
         else
             if [[ -f $QUERIES ]]
             then
-                ./tinydb $PATH_TO_DB $QUERIES
+                ./tinydb $PATH_TO_DB  < $QUERIES
+                #afficher le pid du processus principal
             else
                 err "Le fichier de requêtes n'existe pas"
             fi
@@ -44,10 +52,8 @@ then
         if ! ((COUNT % 5))
         then
             echo -e "  > PID $pid"
-            COUNT=$((COUNT+1))
-        else 
-            COUNT=$((COUNT+1))
         fi
+        COUNT=$((COUNT+1))
     done
 elif [[ $TO_LAUNCH == "sync" ]]
 then
@@ -61,10 +67,8 @@ then
         then
             echo "  Sync process $pid..."
             kill -SIGUSR1 $pid
-            COUNT=$((COUNT+1))
-        else
-            COUNT=$((COUNT+1))
         fi
+        COUNT=$((COUNT+1))
     done
     echo "Done"
 elif [[ $TO_LAUNCH == "shutdown" ]]
@@ -80,7 +84,6 @@ then
         do
             if ! ((COUNT%5))
             then
-                COUNT=$((COUNT+1))
                 #si c'est un processus principal
                 read -p "Voulez-vous terminer le processus $pid? (y/n) : " choice
 
@@ -91,9 +94,8 @@ then
                     pid=$((pid-1))
                     kill -- -$pid
                 fi  
-            else
-                COUNT=$((COUNT+1))
             fi
+            COUNT=$((COUNT+1))
         done
     else
         found=false
@@ -101,7 +103,6 @@ then
         do
             if ! ((COUNT % 5))
             then
-                COUNT=$((COUNT+1))
                 if [[ $pid == $PID ]]
                 then
                     #si c'est un processus principal on kill le groupe associé
@@ -110,15 +111,14 @@ then
                     found=true
                     break
                 fi
-            else
-                COUNT=$((COUNT+1))
             fi
+            COUNT=$((COUNT+1))
         done
         if [[ $found == false ]]
         then
-            err "Le pid donné n'existe pas ou n'est pas celui d'un processus père"
+            err "Le pid donné n'existe pas ou n'est pas celui d'un processus principal"
         fi
     fi
 else
-    err "Mauvaise utilisation!\nUtilisez : './monitoring <opt> [chemin_vers_db] [fichier_requetes]'\n<opt>=run|status|sync|shutdown\nLes crochets signifient que les arguments sont optionnels."
+    err "Mauvaise utilisation!\nUtilisez : './monitoring <opt> [chemin_vers_db] [-f fichier_requetes]'\n<opt>=run|status|sync|shutdown\nLes crochets signifient que les arguments sont optionnels."
 fi
