@@ -31,7 +31,7 @@ void signalHandler(int signum) {
    if (signum == SIGINT) { //^C
      // DOIT ARRETER LES PROCESS ET SAVE LA DB;
      cout <<  endl << "Handling SIGINT signal ... "<< endl;
-     //fclose(stdin);
+     fclose(stdin);
      sigint = 0;
    }else if (signum == SIGUSR1) {
      //doit save la db
@@ -226,7 +226,6 @@ int main(int argc, char const *argv[]) {
     }
   }
   if (!sigint) {
-    cout << "Here whit pid : " << getpid() << endl;
         mySelect.waitSelect(tabStatus[0]);
         myUpdate.waitUpdate(tabStatus[1]);
         myDelete.waitDelete(tabStatus[2]);
