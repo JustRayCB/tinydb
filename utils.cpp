@@ -17,22 +17,22 @@
 using namespace std;
 
 size_t safe_read(int fd, void* buffer, size_t nbytes) {
-  ssize_t nbytes_read = read(fd, buffer, nbytes);
-  if (nbytes_read < 0) {
+  ssize_t nbytesRead = read(fd, buffer, nbytes);
+  if (nbytesRead < 0) {
     perror("read error: ");
     exit(1);
   }
   
-  return (size_t)nbytes_read;
+  return (size_t)nbytesRead;
 }
 
 size_t safe_write(int fd, const void* buffer, size_t nbytes) {
-  ssize_t bytes_written = write(fd, buffer, nbytes);
-  if (bytes_written < 0) {
+  ssize_t bytesWritten = write(fd, buffer, nbytes);
+  if (bytesWritten < 0) {
     perror("write: ");
     exit(1);
   }
-  return (size_t)bytes_written;
+  return (size_t)bytesWritten;
 }
 
 void log_query(query_result_t* result) {
@@ -91,17 +91,7 @@ void log_query(query_result_t* result) {
 size_t getNumberStudent(const char *path){
     std::ifstream in(path, std::ifstream::ate | std::ifstream::binary);
     int size = in.tellg()/sizeof(student_t);
-    //db_init(db, size);
-
-
-    std::cout << "len file : " << in.tellg() << std::endl;
-
-    std::cout << "len student : " << sizeof(student_t) << std::endl;
-
-    std::cout << "Preshot nb étudiants : len file / len sutdent = " << in.tellg() / sizeof(student_t) << std::endl;
-
     return size;
-
 }
 
 bool getType(std::string &command, Select &mySelect, Update &myUpdate, Insert &myInsert, Delete &myDelete){

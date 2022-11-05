@@ -27,25 +27,6 @@ using namespace std;
 
 int sigint = 1;
 
-void isWorking(database_t *db){
-  char buffer[512];
-  int count = 0;
-  for (size_t idx=0; idx < 10; idx++) {
-    student_t one = db->data[idx];
-    if (strcmp(one.section, "info") == 0) {
-            count++;
-    }
-    student_to_str(buffer, &one);
-    std::cout << buffer << std::endl;
-
-    memset(buffer, 0, sizeof(buffer));
-    
-  }
-
-  cout << "Le nombre de personnes en info: " << count <<  endl;
-
-}
-
 void signalHandler(int signum) {
    if (signum == SIGINT) { //^C
      // DOIT ARRETER LES PROCESS ET SAVE LA DB;
@@ -58,7 +39,6 @@ void signalHandler(int signum) {
      cout << "Please press enter " << endl;
 
    }
-   //exit(signum);
 }
 
 
@@ -66,9 +46,8 @@ int main(int argc, char const *argv[]) {
 
   //SIGUSR1 POUR MONITORING SYNC
 
-  const char *db_path = argv[argc-1];
-  string tmp = std::string(db_path);
-  cout << tmp << endl;
+  const char *dbPath = argv[argc-1];
+  string tmp = std::string(dbPath);
   if (tmp.substr(tmp.size()-4, tmp.size()) != ".bin" ) {
     cout << "You should pass a binary file for the database " << endl;
     return 1;
@@ -76,7 +55,7 @@ int main(int argc, char const *argv[]) {
   }
 
   //MEMOIRE PARTAGEE
-  size_t allStudents = getNumberStudent(db_path);
+  size_t allStudents = getNumberStudent(dbPath);
   // PREMIER PARAMETRE DE MMAP nullptr -> Laisse choisir à l'os l'address de la
   // mémoire partagée
   // Si on y met l'address de la db on "essaye" de forcer l'os à mettre la
@@ -111,7 +90,7 @@ int main(int argc, char const *argv[]) {
   tabStatus[3] = 1; //INSERT
   
   db_init(db, allStudents);
-  db_load(db, db_path);
+  db_load(db, dbPath);
 
   pid_t father = getpid();
 
@@ -151,7 +130,7 @@ int main(int argc, char const *argv[]) {
         myInsert.waitInsert(tabStatus[3]);
 
         cout << "Saving database to the disk ..." << endl;
-        db_save(db, db_path);
+        db_save(db, dbPath);
         cout << "Done ..." << endl;
         sigint = 1;
       }
@@ -255,7 +234,7 @@ int main(int argc, char const *argv[]) {
   }
 
   cout << "Saving the database to the disk" << endl;
-  db_save(db, db_path);
+  db_save(db, dbPath);
   munmap(db->data, sizeof(student_t) * db->psize);
   munmap(db, sizeof(database_t));
   printf("Bye bye!\n");
