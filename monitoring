@@ -21,13 +21,10 @@ then
                 err "Le fichier de requêtes n'existe pas"
             fi
             ./tinydb $PATH_TO_DB
-            #afficher le pid du processus principal
-
         else
             if [[ -f $QUERIES ]]
             then
                 ./tinydb $PATH_TO_DB  < $QUERIES
-                #afficher le pid du processus principal
             else
                 err "Le fichier de requêtes n'existe pas"
             fi
