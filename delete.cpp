@@ -21,14 +21,16 @@ int Delete::openPipe(){
 }
 
 void Delete::waitDelete(unsigned &tabStatus){
-    while (tabStatus == 0) {
+  while (tabStatus == 0) { // If the process of Delete has endend the command he
+                           // was doing he update
+                           // the tabStatus to 1
         cout << "Waiting for process Delete to  finish" << endl;
         usleep(500000);
     }
 }
 
 int Delete::writePipe(){
-    char toChar[256];
+    char toChar[256]; // Variable use to write in the pipe cause you cant write a string
     this->closeRead();
     strcpy(toChar, this->getString().c_str());
     if (write(this->getFdWrite(), &toChar, 256) == -1){
@@ -39,9 +41,10 @@ int Delete::writePipe(){
 }
 
 int Delete::readPipe(){
-    memset(this->getFromPipe(), 0, 256);
+    memset(this->getFromPipe(), 0, 256); // Empty the char array
     this->closeWrite();
     if (read(this->getFdRead(), this->getFromPipe(), 256) == -1){
+        perror("Read Delete fd");
         return 1;
     }
     return 0;
@@ -55,8 +58,8 @@ void Delete::closeRead(){
     close(this->getFdRead());
 }
 
-query_result_t Delete::deleteFunc(database_t *db, string query){
-    string command = this->getFromPipe();
+query_result_t Delete::deleteFunc(database_t *db){
+    string command = this->getFromPipe(); // Convert got to string cause it's easier with strings
     query_result_t ret = deletion(db, command.substr(7, command.length()));
     return ret;
 }

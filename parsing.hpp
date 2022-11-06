@@ -18,9 +18,8 @@
  * char *command = strtok_r(query, " ", &query);
  * parse_update(query, field_filter, value_filter, field_to_update, update_value);
  * ```
- * @return: false if the parsing was successful, true otherwise
+ * @return: true if the parsing was successful, false otherwise
  **/
-bool parse_update(char* query_arguments, char* field_filter, char* value_filter, char* field_to_update, char* update_value);
 bool parse_update(std::string &query, std::string& field_filter, std::string &value_filter, std::string& field_to_update,
         std::string &update_value);
 
@@ -32,17 +31,21 @@ bool parse_update(std::string &query, std::string& field_filter, std::string &va
  * char* command = strtok_r(query, " ", &query);
  * parse_insert(query, fname, lname, &id, section, &birthdate);
  * ```
- * @return:false if the parsing was successful, true otherwise
+ * @return: true if the parsing was successful, false otherwise
  **/
 bool parse_insert(char* query_arguments, char* fname, char* lname, unsigned* id, char* section, struct tm* birthdate);
 
 /** 
  * Parse field=value selectors.
  **/
-bool parse_selectors(char* query, char* field, char* value);
-
 bool parse_selectors(std::string &query, std::string &field, std::string &value);
 
-bool parse_selectors(std::string &query, int &day, int &mon, int &year);
+/*
+ * @brief: Parse a birthdate value and update all arguments with the integer
+ * value
+ *
+ * @return If the parsing was successful, false otherwise
+ */
+bool parse_birthdate(std::string &query, int &day, int &mon, int &year);
 
 #endif

@@ -42,8 +42,8 @@ void db_load(database_t *db, const char *path) {
 }
 
 void db_init(database_t *db, size_t &size) {
-  db->lsize = 0;                  // Taille du nombre de cells occupé
-  db->psize = 2*size;               // Taille réelle de la liste
+  db->lsize = 0;                  // Size of the cells that are occupied
+  db->psize = 2*size;               // Real size of the list
 }
 
 void db_add(database_t *db, student_t student) {

@@ -38,6 +38,4 @@ void db_load(database_t *db, const char *path);
  **/
 void db_init(database_t *db, size_t &size);
 
-void dbCopy(student_t *newData, database_t *db);
-
 #endif

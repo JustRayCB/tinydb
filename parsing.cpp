@@ -1,36 +1,18 @@
 #include "parsing.hpp"
 
+#include <exception>
 #include <sstream>
+#include <stdexcept>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
+#include <iostream>
 #include <time.h>
 
 #include "student.hpp"
 
 using namespace std;
 
-bool parse_update(char* query, char* field_filter, char* value_filter, char* field_to_update, char* update_value) {
-    char* key_val_filter = strtok_r(NULL, " ", &query);  // key=val filter
-    if (key_val_filter == NULL) {
-        return false;
-    }
-    if (strtok_r(NULL, " ", &query) == NULL) {  // discard the "set" keyword
-        return false;
-    }
-
-    char* key_val_update = strtok_r(NULL, " ", &query);  // key=val updated value
-    if (key_val_update == NULL) {
-        return false;
-    }
-
-    if (parse_selectors(key_val_filter, field_filter, value_filter) == 0) {
-        return false;
-    }
-    if (parse_selectors(key_val_update, field_to_update, update_value) == 0) {
-        return false;
-    }
-    return true;
-}
 
 bool parse_update(string &query, string& field_filter, string &value_filter, string& field_to_update,
         string &update_value){
@@ -93,19 +75,6 @@ bool parse_insert(char* query, char* fname, char* lname, unsigned* id, char* sec
     return true;
 }
 
-bool parse_selectors(char* query, char* field, char* value) {
-    char* token = strtok_r(NULL, "=", &query); // Premier paramètre = reste du string  qui a été coupé
-    if (token == NULL) {
-        return false;
-    }
-    strcpy(field, token);
-    token = strtok_r(NULL, "=", &query);
-    if (token == NULL) {
-        return false;
-    }
-    strcpy(value, token);
-    return true;
-}
 
 bool parse_selectors(string &query, string &field, string &value){
     stringstream X(query);
@@ -121,11 +90,26 @@ bool parse_selectors(string &query, string &field, string &value){
     }
  
     value = token;
+
+    if (field == "id") { // If the field is Id check if its an integer
+        unsigned tmp;
+        try {
+        tmp = (unsigned)stoi(value);
+        } catch (const invalid_argument& ia) {
+            std::cerr << "Invalid argument: " << ia.what() << std::endl;
+            return false;
+        } catch (const exception& e){
+            std::cerr << "Unknown error : " << e.what() << std::endl;
+            return false;
+        }
+        tmp++; // Just not to have the W-Unused warning
+
+    }
     return true;
 
 
 } 
-bool parse_selectors(string &query, int &day, int &mon, int &year){
+bool parse_birthdate(string &query, int &day, int &mon, int &year){
     stringstream X(query);
 
     string token;
@@ -133,17 +117,30 @@ bool parse_selectors(string &query, int &day, int &mon, int &year){
     if (!getline(X, token, '/')){
         return false;
     }
-    day = stoul(token, nullptr, 10);
+    try {
+        day = stoul(token, nullptr, 10);
+    } catch (const invalid_argument &ia) {
+        return false;
+    }
 
     if (!getline(X, token, '/')){
         return false;
     }
-    mon = stoul(token, nullptr, 10) -1; // Parce que c'est décalé de 1 dans tm_mon
+
+    try {
+        mon = stoul(token, nullptr, 10) -1; // Parce que c'est décalé de 1 dans tm_mon
+    } catch (const invalid_argument &ia) {
+        return false;
+    }
 
     if (!getline(X, token, '/')){
         return false;
     }
-    year = stoul(token, nullptr, 10)-1900;
+    try {
+        year = stoul(token, nullptr, 10)-1900;
+    } catch (const invalid_argument &ia) {
+        return false;
+    }
 
     return true;
 

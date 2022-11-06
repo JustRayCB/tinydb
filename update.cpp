@@ -21,14 +21,16 @@ int Update::openPipe(){
 }
 
 void Update::waitUpdate(unsigned &tabStatus){
-    while (tabStatus == 0) {
+  while (tabStatus == 0) { // If the process of Update has endend the command he
+                           // was doing he update
+                           // the tabStatus to 1
         cout << "Waiting for process Update to  finish" << endl;
         usleep(500000);
     }
 }
 
 int Update::writePipe(){
-    char toChar[256];
+    char toChar[256]; // Variable use to write in the pipe cause we cant write strings
     this->closeRead();
     strcpy(toChar, this->getString().c_str());
     if (write(this->getFdWrite(), &toChar, 256) == -1){
@@ -39,7 +41,7 @@ int Update::writePipe(){
 }
 
 int Update::readPipe(){
-    memset(this->getFromPipe(), 0, 256);
+    memset(this->getFromPipe(), 0, 256); // Empty the Char array
     this->closeWrite();
     if (read(this->getFdRead(), this->getFromPipe(), 256) == -1){
         return 1;
@@ -55,7 +57,7 @@ void Update::closeRead(){
     close(this->getFdRead());
 }
 
-query_result_t Update::updateFunc(database_t *db, string query){
+query_result_t Update::updateFunc(database_t *db){
     string command = this->getFromPipe();
     query_result_t ret = update(db, command.substr(7, command.length()));
     return ret;

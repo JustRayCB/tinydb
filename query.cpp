@@ -4,8 +4,10 @@
 #include "student.hpp"
 #include "utils.hpp"
 
+#include <bits/iterator_concepts.h>
 #include <cstddef>
 #include <iterator>
+#include <stdexcept>
 #include <sys/mman.h>
 #include <cstring>
 #include <unistd.h>
@@ -22,18 +24,11 @@ void query_result_init(query_result_t* result, string& query) {
   clock_gettime(CLOCK_REALTIME, &now);
   result->start_ns = now.tv_nsec + 1e9 * now.tv_sec;
   result->status = QUERY_SUCCESS;
-  // Votre code ici
   result->students = new student_t[10000];
   result->lsize = 0;
   result->psize = 10000;
   strcpy(result->query, query.c_str());
   result->end_ns = 0;
-
-  //Pour avoir le temps de fin en nanoseconds
-  //struct timespec end;
-  //clock_gettime(CLOCK_REALTIME, &now);
-  //result->end_ns = end.tv_nsec + 1e9 *end.tv_sec;
-
   
 }
 
@@ -66,7 +61,7 @@ void updateStudent(const string &f_update, string &v_update, student_t &student)
     strcpy(student.section, v_update.c_str());
   }else {
     int day, mon, year;
-    parse_selectors(v_update, day, mon, year);
+    parse_birthdate(v_update, day, mon, year);
     student.birthdate.tm_mday = day;
     student.birthdate.tm_mon = mon;
     student.birthdate.tm_year = year;
@@ -84,27 +79,21 @@ int findStudents(database_t *database, const string &field, string& value, query
   }
 
   for (size_t idx=0; idx < dbSize; idx++) {
-
-    //Just pour voir les info student en débuggant
-    //student_t st = database->data[idx];
-    //char one[512];
-    //student_to_str(one, &st);
-    //cout << one << endl;
-    
     if (field == "id") {
-      //if (database->data[idx].id == stoul(value, nullptr, 10)) {
-      if (database->data[idx].id == (unsigned)stoi(value)) {
+      if (to_string(database->data[idx].id) == value) {
         if (isUpdate) {
           updateStudent(f_update, v_update, database->data[idx]);
+          query_result_add(&myQuery, database->data[idx]);
+        }else {
+          query_result_add(&myQuery, database->data[idx]);
+          return 0;
         }
-        query_result_add(&myQuery, database->data[idx]);
       }
     }else if (field == "fname") {
       if (database->data[idx].fname == value) {
        if (isUpdate) {
           updateStudent(f_update, v_update, database->data[idx]);
         }
-
         query_result_add(&myQuery, database->data[idx]);
       }
     }else if (field == "lname") {
@@ -120,27 +109,26 @@ int findStudents(database_t *database, const string &field, string& value, query
        if (isUpdate) {
           updateStudent(f_update, v_update, database->data[idx]);
         }
-
         query_result_add(&myQuery, database->data[idx]);
       }
     }else if (field == "birthdate"){
       int day, mon, year;
-      if (parse_selectors(value, day, mon, year)) {
+      if (parse_birthdate(value, day, mon, year)) {
         if ((day == database->data[idx].birthdate.tm_mday) 
         and (mon == database->data[idx].birthdate.tm_mon) 
         and (year == database->data[idx].birthdate.tm_year)) {
          if (isUpdate) {
           updateStudent(f_update, v_update, database->data[idx]);
           }
-
           query_result_add(&myQuery, database->data[idx]);
         }
+      }else {
+        cout << "Problem with the value of birthdate" << endl;
+        return 1;
       }
     }else {
-      cout << "ERROR WITH THE FIELD" << endl;
-      break;
+      return 2;
     }
-    //memset(one, 0, sizeof(one)); Pour clear une char array
   }
   return 0;
 }
@@ -152,12 +140,12 @@ void swapStudent(database_t *database, size_t &idx, size_t &newSize){
     newSize--;
 }
 
-void deleteStudents(database_t *database, string field, string value, query_result_t &myQuery) {
+int deleteStudents(database_t *database, string field, string value, query_result_t &myQuery) {
   size_t idx=0;
   string toDel = "toDelete";
   size_t newSize = database->lsize;
 
-  while (database->data[idx].section != toDel){// or idx < database->lsize) {
+  while (database->data[idx].section != toDel){
     if (field == "id") {
       if (to_string(database->data[idx].id) == value) {
         query_result_add(&myQuery, database->data[idx]);
@@ -188,7 +176,7 @@ void deleteStudents(database_t *database, string field, string value, query_resu
       }
     } else if (field == "birthdate") {
         int day, mon, year;
-        if (parse_selectors(value, day, mon, year)) {
+        if (parse_birthdate(value, day, mon, year)) {
           if ((day == database->data[idx].birthdate.tm_mday) 
             and (mon == database->data[idx].birthdate.tm_mon) 
             and (year == database->data[idx].birthdate.tm_year)) {
@@ -197,11 +185,17 @@ void deleteStudents(database_t *database, string field, string value, query_resu
               swapStudent(database, idx, newSize);
               idx--;
           }
+        }else {
+          cout << "Problem with the value of birthdate" << endl;
+          return 1;
         }
+      }else {
+        return 2;
       }
     idx++;
   }
   database->lsize = newSize;
+  return 0;
 
 }
 
@@ -211,19 +205,24 @@ query_result_t deletion(database_t *database, string query) {
   string field, value;
   if (!parse_selectors(query, field, value)) {
     cout << "Problem with the query delete" << endl;
-    myQuery.status = QUERY_FAILURE;
-    struct timespec end;
-    clock_gettime(CLOCK_REALTIME, &end);
-    myQuery.end_ns = end.tv_nsec + 1e9 *end.tv_sec;
+    cout << "Please enter the arguments right" << endl;
+    invalidQuery(myQuery);
     return myQuery;
-
   }
   string qu = "delete " + query;
   query_result_init(&myQuery, qu);
 
-  deleteStudents(database, field, value, myQuery);
-
-
+  int ret =  deleteStudents(database, field, value, myQuery);
+  if (ret){
+    cout << "Problem with the query delete" << endl;
+    if (ret == 2) {
+      invalidQuery(myQuery, 2);
+    }else{
+      invalidQuery(myQuery);
+    }
+    delete [] myQuery.students;
+    return myQuery;
+  }
 
   struct timespec end;
   clock_gettime(CLOCK_REALTIME, &end);
@@ -238,28 +237,33 @@ query_result_t deletion(database_t *database, string query) {
 query_result_t select(database_t *database, string query){
   query_result_t myQuery;
   string field, value;
-  if (!parse_selectors(query, field, value)) {
+  if (!parse_selectors(query, field, value)){
     cout << "Problem with the query select" << endl;
-    myQuery.status = QUERY_FAILURE;
-    struct timespec end;
-    clock_gettime(CLOCK_REALTIME, &end);
-    myQuery.end_ns = end.tv_nsec + 1e9 *end.tv_sec;
+    cout << "Please enter the arguments right" << endl;
+    invalidQuery(myQuery);
     return myQuery;
-
   }
   string qu = "select " + query;
   query_result_init(&myQuery, qu);
 
-  findStudents(database, field, value, myQuery,
-               field); // Last parmateres field will not be used
-                       // It's here to complete the function's parmateres
+  int ret = findStudents(database, field, value, myQuery, field);// Last parmateres field will not be used
+  if (ret)                                                      //It's here to complete the function's parmateres
+  {    
+    cout << "Problem with the query select" << endl;
+    if (ret == 2) { // If UNRECOGNISED_FIELD
+      invalidQuery(myQuery, 2);
+    }else {
+      invalidQuery(myQuery);
+    }
+    delete [] myQuery.students;
+    return myQuery;
+
+  }
 
   struct timespec end;
   clock_gettime(CLOCK_REALTIME, &end);
   myQuery.end_ns = end.tv_nsec + 1e9 *end.tv_sec;
 
-  //log_query(&myQuery);
-  //delete [] myQuery.students;
 
   return myQuery;
 
@@ -270,16 +274,24 @@ query_result_t update(database_t *database, string query){
   string field_filter, value_filter, field_to_update, update_value;
   if (!parse_update(query, field_filter, value_filter, field_to_update, update_value)) {
     cout << "Problem with the query update" << endl;
-    myQuery.status = QUERY_FAILURE;
-    struct timespec end;
-    clock_gettime(CLOCK_REALTIME, &end);
-    myQuery.end_ns = end.tv_nsec + 1e9 *end.tv_sec;
+    cout << "Please enter the arguments right" << endl;
+    invalidQuery(myQuery);
     return myQuery;
+
   }
   string qu = "update " + query;
   query_result_init(&myQuery, qu);
-  
-  findStudents(database, field_filter, value_filter, myQuery, update_value, field_to_update);
+  int ret = findStudents(database, field_filter, value_filter, myQuery, update_value, field_to_update);
+  if (ret){
+    cout << "Problem with the query update" << endl;
+    if (ret == 2) {
+      invalidQuery(myQuery, 2);
+    }else {
+      invalidQuery(myQuery);
+    }
+    delete [] myQuery.students;
+    return myQuery;
+  }
   struct timespec end;
   clock_gettime(CLOCK_REALTIME, &end);
   myQuery.end_ns = end.tv_nsec + 1e9 *end.tv_sec;
@@ -303,13 +315,21 @@ query_result_t insert(database_t* database, string query){
     strcpy(student.fname, strtok(copy_query, &espace));  // recopiage student->fname
     strcpy(student.lname, strtok(NULL, &espace));  // recopiage student->lname
     //student.id = atoi(strtok(NULL, &espace));  // recopiage student->id Problème premier appel à insert
-    student.id = (unsigned)stoi(strtok(NULL, &espace));  // recopiage student->id
+    try {
+      student.id = (unsigned)stoi(strtok(NULL, &espace));  // recopiage student->id
+    } catch (const invalid_argument& ia) {
+      cout << "Error with the value for id" << endl;
+      invalidQuery(myQuery);
+      delete [] myQuery.students;
+      return myQuery;
+    }
     
     // Check if ID already in database
     for(size_t i = 0; i < database->lsize;i++){
       if(student.id == database->data[i].id){
-        cout<<"Erreur ID est déjà dans la base de données."<<endl;
-        myQuery.status = QUERY_FAILURE;
+        cout<<"Error: Id is already in the database."<<endl;
+        invalidQuery(myQuery);
+        delete [] myQuery.students;
         return myQuery;
       }
     }
@@ -319,10 +339,9 @@ query_result_t insert(database_t* database, string query){
     
     if(!parse_insert(copy_query, student.fname, student.lname, &student.id, student.section, &student.birthdate)){
       cout << "Problem with the query insert" << endl;
-      myQuery.status = QUERY_FAILURE;
-      struct timespec end;
-      clock_gettime(CLOCK_REALTIME, &end);
-      myQuery.end_ns = end.tv_nsec + 1e9 *end.tv_sec;
+      cout << "Please enter the arguments right" << endl;
+      invalidQuery(myQuery);
+      delete [] myQuery.students;
       return myQuery;
     }
     // reussi, on sauvegarde
@@ -334,4 +353,15 @@ query_result_t insert(database_t* database, string query){
     clock_gettime(CLOCK_REALTIME, &end);
     myQuery.end_ns = end.tv_nsec + 1e9 *end.tv_sec;
     return myQuery;
+}
+
+void invalidQuery(query_result_t &myQuery, unsigned status){
+  if (status == 2) {
+    myQuery.status = UNRECOGNISED_FIELD;
+  }else {
+    myQuery.status = QUERY_FAILURE;
+  }
+    struct timespec end;
+    clock_gettime(CLOCK_REALTIME, &end);
+    myQuery.end_ns = end.tv_nsec + 1e9 *end.tv_sec;
 }

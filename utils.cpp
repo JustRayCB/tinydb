@@ -43,23 +43,18 @@ void log_query(query_result_t* result) {
   int pid = 1;
   
   if (stat(logs.c_str(), &buffer) != 0) {
-    //cout << "The dir doesn't exist" << endl;
     pid = fork();
     if (pid == -1) {
-      cout << "Error with the fork on query" << endl;
+      cout << "Error with the fork on log query" << endl;
     }
   }
-  //else {
-      //cout << "The dir exists" << endl;
-      
-  //}  
 
   if (pid == 0) {
     // Child process
     execlp("mkdir", "mkdir", "logs", NULL);
   }else{
     // Parent process
-    wait(NULL);
+    wait(NULL); // Wait child process to finish his execution
     char buffer[512];
     if (result->status == QUERY_SUCCESS) {
       char filename[512];
@@ -82,7 +77,8 @@ void log_query(query_result_t* result) {
       }
       fclose(f);
     }else if (result->status == UNRECOGNISED_FIELD) {
-    fprintf(stderr, "Unrecognized field in query %s\n", result->query);
+    //fprintf(stderr, "Unrecognized field in query %s\n", result->query);
+    cerr<<"Unrecognized field in query " << result->query << endl;
     }
   }
 
@@ -96,8 +92,7 @@ size_t getNumberStudent(const char *path){
 
 bool getType(std::string &command, Select &mySelect, Update &myUpdate, Insert &myInsert, Delete &myDelete){
   if (command.substr(0, 6) == "select") {
-    //select = command;
-    mySelect.setString(command);
+    mySelect.setString(command); // Update the string of the class that store the command
   }else if (command.substr(0, 6) == "update") {
     myUpdate.setString(command);
   }else if (command.substr(0, 6) == "insert") {
@@ -105,6 +100,7 @@ bool getType(std::string &command, Select &mySelect, Update &myUpdate, Insert &m
   }else if (command.substr(0, 6) == "delete"){
     myDelete.setString(command);
   }else {
+    // It's not an available command
     return false;
   }
   return true;
@@ -123,36 +119,43 @@ bool getCommand(Select &mySelect, Update &myUpdate, Insert &myInsert, Delete &my
   }else if (getType(commandLine, mySelect, myUpdate, myInsert, myDelete)) {
     return true;
   }
-  else if (commandLine == "") {
+  else if (commandLine == "") { // If the user just press enter
     return false;
   }else {
     cout << "Please enter one of these instruction: "
-    "select, update, insert, delete or transaction if you want to end the command " << endl;
+    "select, update, insert, delete or transaction " << endl;
     return false;
   }
 }
 
-
- 
 bool createProcess(Select &mySelect, Update &myUpdate, Insert &myInsert, Delete &myDelete){
   mySelect.setPid(fork());
   if (mySelect.getPid() < 0) { perror("Fork() Select"); return false;}
-  else if (!mySelect.getPid()) {/*IN SELECT SON PROCESS*/ /*cout << "Select : " << getpid() << " père : " << getppid()<< endl;*/}
+  else if (!mySelect.getPid()) {/*IN SELECT SON PROCESS*/}
   else {/*IN PARENT PROCESS*/
     myUpdate.setPid(fork());
     if (myUpdate.getPid() < 0) {perror("fork() Update"); return false;}
-    else if (!myUpdate.getPid()) {/*IN UPDATE SON PROCESS*/  /*cout << "Update : " << getpid() << " père : " << getppid()<< endl;*/}    
-    else { //[>IN PARENT PROCESS<]
+    else if (!myUpdate.getPid()) {/*IN UPDATE SON PROCESS*/}    
+    else { //IN PARENT PROCESS
       myDelete.setPid(fork());
       if (myDelete.getPid() < 0) {perror("fork() Delete"); return false;}
-      else if (!myDelete.getPid()) {/*[>IN DELETE SON PROCESS<]  cout << "Delete : " << getpid() << " père : " << getppid()<< endl;*/}    
-      else {//[>IN PARENT PROCESS<]
+      else if (!myDelete.getPid()) {/*IN DELETE SON PROCESS*/}    
+      else {//IN PARENT PROCESS
         myInsert.setPid(fork());
         if (myInsert.getPid() < 0) {perror("fork() Insert"); return false;}
-        else if (!myInsert.getPid()) {/*[>IN INSERT SON PROCESS<]  cout << "Insert : " << getpid() << " père : " << getppid()<< endl;*/}
+        else if (!myInsert.getPid()) {/*IN INSERT SON PROCESS*/}
       }
     }
   }
   return true;
 
+}
+
+int fileExist(const string dbPath){
+  struct stat buffer;
+  if (stat(dbPath.c_str(), &buffer) == 0) {
+    //THE FILE EXISTS
+    return 0;
+  }
+  return 1;
 }
