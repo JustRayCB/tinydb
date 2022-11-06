@@ -60,6 +60,7 @@ void Delete::closeRead(){
 
 query_result_t Delete::deleteFunc(database_t *db){
     string command = this->getFromPipe(); // Convert got to string cause it's easier with strings
+    cout << "Running query '" << command << "'..." <<  endl;
     query_result_t ret = deletion(db, command.substr(7, command.length()));
     return ret;
 }

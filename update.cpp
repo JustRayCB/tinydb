@@ -59,6 +59,7 @@ void Update::closeRead(){
 
 query_result_t Update::updateFunc(database_t *db){
     string command = this->getFromPipe();
+    cout << "Running query '" << command << "'..." <<  endl;
     query_result_t ret = update(db, command.substr(7, command.length()));
     return ret;
 }

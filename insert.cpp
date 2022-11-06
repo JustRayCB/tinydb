@@ -60,6 +60,7 @@ void Insert::closeRead(){
 
 query_result_t Insert::insertFunc(database_t *db){
     string command = this->getFromPipe();
+    cout << "Running query '" << command << "'..." <<  endl;
     query_result_t ret = insert(db, command.substr(7, command.length()));
     return ret;
 }
