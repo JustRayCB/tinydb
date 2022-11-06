@@ -75,7 +75,7 @@ int findStudents(database_t *database, const string &field, string& value, query
   size_t dbSize = database->lsize;
   bool isUpdate = false;
   if (f_update != " ") {
-    isUpdate = true;
+    isUpdate = true; // Flag to know if we are into an update command
   }
 
   for (size_t idx=0; idx < dbSize; idx++) {
@@ -86,7 +86,7 @@ int findStudents(database_t *database, const string &field, string& value, query
           query_result_add(&myQuery, database->data[idx]);
         }else {
           query_result_add(&myQuery, database->data[idx]);
-          return 0;
+          return 0; // Because the id of a student is unique we juste need to find one
         }
       }
     }else if (field == "fname") {
@@ -127,7 +127,7 @@ int findStudents(database_t *database, const string &field, string& value, query
         return 1;
       }
     }else {
-      return 2;
+      return 2; // field error
     }
   }
   return 0;
@@ -142,23 +142,23 @@ void swapStudent(database_t *database, size_t &idx, size_t &newSize){
 
 int deleteStudents(database_t *database, string field, string value, query_result_t &myQuery) {
   size_t idx=0;
-  string toDel = "toDelete";
+  string toDel = "toDelete"; // Flag to know if we want to delete a student
   size_t newSize = database->lsize;
 
-  while (database->data[idx].section != toDel){
+  while (database->data[idx].section != toDel){ // While we don't reach a deleted student
     if (field == "id") {
       if (to_string(database->data[idx].id) == value) {
         query_result_add(&myQuery, database->data[idx]);
         updateStudent("section", toDel, database->data[idx]);
         swapStudent(database, idx, newSize);
-        break;
+        break; // id of a student is unique
       }
     }else if (field == "fname") {
       if (database->data[idx].fname == value) {
         query_result_add(&myQuery, database->data[idx]);
         updateStudent("section", toDel, database->data[idx]);
         swapStudent(database, idx, newSize);
-        idx--;
+        idx--; // We decrease idx because we have to check if the student we mode at idx will be delete or not
       }
     } else if (field == "lname") {
         if (database->data[idx].lname == value) {
@@ -190,7 +190,7 @@ int deleteStudents(database_t *database, string field, string value, query_resul
           return 1;
         }
       }else {
-        return 2;
+        return 2;  // Field error
       }
     idx++;
   }
@@ -205,7 +205,7 @@ query_result_t deletion(database_t *database, string query) {
   string field, value;
   if (!parse_selectors(query, field, value)) {
     cout << "Problem with the query delete" << endl;
-    cout << "Please enter the arguments right" << endl;
+    cout << "Please enter the arguments correctly" << endl;
     invalidQuery(myQuery);
     return myQuery;
   }
