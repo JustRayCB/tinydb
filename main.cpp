@@ -234,10 +234,6 @@ int main(int argc, char const *argv[]) {
         myUpdate.waitUpdate(tabStatus[1]);
         myDelete.waitDelete(tabStatus[2]);
         myInsert.waitInsert(tabStatus[3]);
-        kill(mySelect.getPid(), SIGTERM);
-        kill(myUpdate.getPid(), SIGTERM);
-        kill(myInsert.getPid(), SIGTERM);
-        kill(myDelete.getPid(), SIGTERM);
   }
 
   cout << "Saving the database to the disk..." << endl;
@@ -246,5 +242,10 @@ int main(int argc, char const *argv[]) {
   munmap(db->data, sizeof(student_t) * db->psize);
   munmap(db, sizeof(database_t));
   cout << "Bye bye" << endl;
+
+  kill(mySelect.getPid(), SIGTERM);
+  kill(myUpdate.getPid(), SIGTERM);
+  kill(myInsert.getPid(), SIGTERM);
+  kill(myDelete.getPid(), SIGTERM);
   return 0;
 }
