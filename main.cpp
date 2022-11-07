@@ -24,6 +24,14 @@
 #include "insert.hpp"
 #include "select.hpp"
 
+/*
+ * Main file for the program tinyDb
+ * Groupe: Callens Hugo:000513303, Contuliano Bravo Rayan:000537050, Arkadiusz Zaleski: 
+ * The project consist into load a database from a binary file and
+ * allow the user to make action to this database, there is also a bash section
+ * to monitor the c++ program
+ */
+
 using namespace std;
 
 int sigint = 1;
