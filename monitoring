@@ -14,6 +14,7 @@ then
     #soit le fichier existe
     if [[ -f "$PATH_TO_DB" ]]
     then
+        echo "Im here"
         if [[ $QUERIES == "" ]]
         then
             if [[ $FLAG == "-f" ]]
@@ -36,10 +37,21 @@ then
             fi
         fi
     else
-        #soit le fichier n'existe pas
-        mkdir data
-        touch $PATH_TO_DB
-        err "Le chemin vers la base de données n'existe pas"
+        #soit le fichier n'existe pas et data existe
+        if ! [[ -d "data" ]]
+        then
+            mkdir data
+        fi
+        if [[ $PATH_TO_DB == "-f" ]]
+        then
+            touch data/students.bin
+            err "Le chemin vers la base de données n'existe pas, lancement avec data/students.bin"
+            ./tinydb data/students.bin
+        else
+            touch $PATH_TO_DB
+            err "Le chemin vers la base de données n'existe pas, lancement avec une base de données vide"
+            ./tinydb $PATH_TO_DB
+        fi
     fi
 elif [[ $TO_LAUNCH == "status" ]]
 then
