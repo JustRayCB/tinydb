@@ -62,7 +62,6 @@ int main(int argc, char const *argv[]) {
 
   
   size_t allStudents = getNumberStudent(dbPath);
-  cout << "Nb student" << allStudents << endl;
   if (!allStudents) {
     // If the binary file is empty
     allStudents = 1000;
