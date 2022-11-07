@@ -20,11 +20,17 @@ then
             then
                 err "Le fichier de requêtes n'existe pas"
             fi
-            ./tinydb $PATH_TO_DB
+            set -m
+            ./tinydb $PATH_TO_DB &
+            echo "PID=$!"
+            fg
         else
             if [[ -f $QUERIES ]]
             then
-                ./tinydb $PATH_TO_DB  < $QUERIES
+                set -m
+                ./tinydb $PATH_TO_DB  < $QUERIES &
+                echo "PID=$!"
+                fg
             else
                 err "Le fichier de requêtes n'existe pas"
             fi
