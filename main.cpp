@@ -62,6 +62,10 @@ int main(int argc, char const *argv[]) {
     return 1;
   }
 
+  if (tmp.size() <=3) {
+    cout << "You should pass a binary file for the database " << endl;
+    return 1;
+  }
   if (tmp.substr(tmp.size()-4, tmp.size()) != ".bin" ) { // Check if the file is a binary file
     cout << "You should pass a binary file for the database " << endl;
     return 1;
