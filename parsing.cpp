@@ -75,6 +75,53 @@ bool parse_insert(char* query, char* fname, char* lname, unsigned* id, char* sec
     return true;
 }
 
+bool parse_insert(std::string& query_arguments, std::string& fname, std::string& lname, std::string& id, std::string& section, std::string& birthdate){
+    stringstream X(query_arguments);
+    cout << query_arguments << endl;
+    string token;
+
+    if (!getline(X, token, ' ')) {
+        return false;
+    }
+    
+    fname = token;
+
+    if (!getline(X, token, ' ')) {
+        return false;
+    }
+
+    lname = token;
+    if (!getline(X, token, ' ')) {
+        return false;
+    }
+
+    id = token;
+    unsigned tmp;
+    try {
+    tmp = (unsigned)stoi(id);
+    } catch (const invalid_argument& ia) {
+        std::cerr << "Invalid argument: " << ia.what() << std::endl;
+        return false;
+    } catch (const exception& e){
+        std::cerr << "Unknown error : " << e.what() << std::endl;
+        return false;
+    }
+    tmp++; // Just not to have the W-Unused warning
+
+    if (!getline(X, token, ' ')) {
+        return false;
+    }
+
+    section = token;
+
+    if (!getline(X, token, ' ')) {
+        return false;
+    }
+
+    birthdate = token;
+    return true;
+
+}
 
 bool parse_selectors(string &query, string &field, string &value){
     stringstream X(query);
@@ -92,7 +139,7 @@ bool parse_selectors(string &query, string &field, string &value){
     value = token;
 
     if (field == "id") { // If the field is Id check if its an integer
-        unsigned tmp;
+         unsigned tmp;
         try {
         tmp = (unsigned)stoi(value);
         } catch (const invalid_argument& ia) {
@@ -104,11 +151,10 @@ bool parse_selectors(string &query, string &field, string &value){
         }
         tmp++; // Just not to have the W-Unused warning
 
-    }
+   }
     return true;
-
-
 } 
+
 bool parse_birthdate(string &query, int &day, int &mon, int &year){
     stringstream X(query);
 

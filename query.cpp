@@ -301,58 +301,51 @@ query_result_t update(database_t *database, string query){
 
 }
 
-query_result_t insert(database_t* database, string query){
-    const char espace = ' ';
-    query_result_t myQuery;
-    string field_filter, value_filter, field_to_update, update_value;
-    student_t student;
-    
-    string qu = "insert " + query;
-    query_result_init(&myQuery, qu);
-    
-    char copy_query[256]; // Copie pour avoir un char* et pas const char*
-    strcpy(copy_query, query.c_str());
-    strcpy(student.fname, strtok(copy_query, &espace));  // recopiage student->fname
-    strcpy(student.lname, strtok(NULL, &espace));  // recopiage student->lname
-    //student.id = atoi(strtok(NULL, &espace));  // recopiage student->id Problème premier appel à insert
-    try {
-      student.id = (unsigned)stoi(strtok(NULL, &espace));  // recopiage student->id
-    } catch (const invalid_argument& ia) {
-      cout << "Error with the value for id" << endl;
-      invalidQuery(myQuery);
-      delete [] myQuery.students;
-      return myQuery;
-    }
-    
-    // Check if ID already in database
-    for(size_t i = 0; i < database->lsize;i++){
+query_result_t insert(database_t *database, std::string query){
+  query_result_t myQuery;
+  string fname, lname, id, section, birthdate;
+  if (!parse_insert(query, fname, lname, id, section, birthdate)) {
+    cout << "Problem with the query insert" << endl;
+    cout << "Please enter the arguments correctly" << endl;
+    invalidQuery(myQuery);
+    return myQuery;
+  }
+  string qu = "insert " + query;
+  query_result_init(&myQuery, qu);
+
+  student_t student;
+  updateStudent("fname", fname, student);
+  updateStudent("lname", lname, student);
+  updateStudent("id", id, student);
+  updateStudent("section", section, student);
+
+  int day, mon, year;
+  if (!parse_birthdate(birthdate, day, mon, year)){
+    cout << "Problem with the query insert" << endl;
+    cout << "Please enter the arguments correctly" << endl;
+    invalidQuery(myQuery);
+    return myQuery;
+  }
+  updateStudent("birthdate", birthdate, student);
+
+  for(size_t i = 0; i < database->lsize;i++){
       if(student.id == database->data[i].id){
         cout<<"Error: Id is already in the database."<<endl;
         invalidQuery(myQuery);
         delete [] myQuery.students;
         return myQuery;
       }
-    }
-    strcpy(student.section, strtok(NULL, &espace));  // recopiage student->section
-    strptime(strtok(NULL, &espace), "%e/%m/%Y" ,&student.birthdate);  // recopiage student->birthdate
-    strcpy(copy_query, query.c_str());  // reset le pointeur au debut de la query
-    
-    if(!parse_insert(copy_query, student.fname, student.lname, &student.id, student.section, &student.birthdate)){
-      cout << "Problem with the query insert" << endl;
-      cout << "Please enter the arguments right" << endl;
-      invalidQuery(myQuery);
-      delete [] myQuery.students;
-      return myQuery;
-    }
-    // reussi, on sauvegarde
-    myQuery.students[0] = student;
-    myQuery.lsize = 1;
-    db_add(database, student);
+  }
 
-    struct timespec end;
-    clock_gettime(CLOCK_REALTIME, &end);
-    myQuery.end_ns = end.tv_nsec + 1e9 *end.tv_sec;
-    return myQuery;
+  query_result_add(&myQuery, student); 
+  db_add(database, student);
+
+  struct timespec end;
+  clock_gettime(CLOCK_REALTIME, &end);
+  myQuery.end_ns = end.tv_nsec + 1e9 *end.tv_sec;
+  return myQuery;
+
+
 }
 
 void invalidQuery(query_result_t &myQuery, unsigned status){

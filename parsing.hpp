@@ -41,7 +41,7 @@ bool parse_update(std::string &query, std::string& field_filter, std::string &va
  * ```
  * @return: true if the parsing was successful, false otherwise
  **/
-bool parse_insert(char* query_arguments, char* fname, char* lname, unsigned* id, char* section, struct tm* birthdate);
+bool parse_insert(std::string& query_arguments, std::string& fname, std::string& lname, std::string& id, std::string& section, std::string& birthdate);
 
 /** 
  * Parse field=value selectors.
