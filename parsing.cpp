@@ -77,7 +77,6 @@ bool parse_insert(char* query, char* fname, char* lname, unsigned* id, char* sec
 
 bool parse_insert(std::string& query_arguments, std::string& fname, std::string& lname, std::string& id, std::string& section, std::string& birthdate){
     stringstream X(query_arguments);
-    cout << query_arguments << endl;
     string token;
 
     if (!getline(X, token, ' ')) {
