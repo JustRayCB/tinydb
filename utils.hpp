@@ -10,6 +10,13 @@
 #include "delete.hpp"
 #include "insert.hpp"
 
+/*
+ * utils.hpp file for the program tinyDb
+ * Groupe: Callens Hugo:000513303, Contuliano Bravo Rayan:000537050, Zaleski Arkadiusz:000516050 
+ */
+
+
+
 /**
  * @brief Effectue un `read` en vérifiant la valeur de retour.
  * Si la valeur de retour est négative, la fonction affiche l'erreur et termine

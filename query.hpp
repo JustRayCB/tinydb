@@ -5,6 +5,12 @@
 
 #include "db.hpp"
 
+/*
+ * query.hpp file for the program tinyDb
+ * Groupe: Callens Hugo:000513303, Contuliano Bravo Rayan:000537050, Zaleski Arkadiusz:000516050 
+ */
+
+
 typedef enum { QUERY_SUCCESS, QUERY_FAILURE, UNRECOGNISED_FIELD } QUERY_STATUS;
 
 /**
