@@ -44,36 +44,6 @@ bool parse_update(string &query, string& field_filter, string &value_filter, str
 }
 
 
-bool parse_insert(char* query, char* fname, char* lname, unsigned* id, char* section, struct tm* birthdate) {
-    char* token = strtok_r(NULL, " ", &query);
-    if (token == NULL) {
-        return false;
-    }
-    strcpy(fname, token);
-    token = strtok_r(NULL, " ", &query);
-    if (token == NULL) {
-        return false;
-    }
-    strcpy(lname, token);
-    token = strtok_r(NULL, " ", &query);
-    if (token == NULL) {
-        return false;
-    }
-    *id = (unsigned)atol(token);
-    token = strtok_r(NULL, " ", &query);
-    if (token == NULL) {
-        return false;
-    }
-    strcpy(section, token);
-    token = strtok_r(NULL, " ", &query);
-    if (token == NULL) {
-        return false;
-    }
-    if (strptime(token, "%d/%m/%Y", birthdate) == NULL) {
-        return false;
-    }
-    return true;
-}
 
 bool parse_insert(std::string& query_arguments, std::string& fname, std::string& lname, std::string& id, std::string& section, std::string& birthdate){
     stringstream X(query_arguments);
@@ -118,6 +88,12 @@ bool parse_insert(std::string& query_arguments, std::string& fname, std::string&
     }
 
     birthdate = token;
+
+    int day, mon, year;
+    if (!parse_birthdate(birthdate, day, mon, year)) {
+        return false;
+    }
+
     return true;
 
 }
@@ -149,8 +125,14 @@ bool parse_selectors(string &query, string &field, string &value){
             return false;
         }
         tmp++; // Just not to have the W-Unused warning
-
    }
+
+    if (field == "birthdate") {
+        int day, mon, year;
+        if (!parse_birthdate(value, day, mon, year)) {
+            return false;
+        }
+    }
     return true;
 } 
 

@@ -239,7 +239,7 @@ query_result_t select(database_t *database, string query){
   string field, value;
   if (!parse_selectors(query, field, value)){
     cout << "Problem with the query select" << endl;
-    cout << "Please enter the arguments right" << endl;
+    cout << "Please enter the arguments correctly" << endl;
     invalidQuery(myQuery);
     return myQuery;
   }
@@ -274,7 +274,7 @@ query_result_t update(database_t *database, string query){
   string field_filter, value_filter, field_to_update, update_value;
   if (!parse_update(query, field_filter, value_filter, field_to_update, update_value)) {
     cout << "Problem with the query update" << endl;
-    cout << "Please enter the arguments right" << endl;
+    cout << "Please enter the arguments correctly" << endl;
     invalidQuery(myQuery);
     return myQuery;
 
@@ -318,14 +318,6 @@ query_result_t insert(database_t *database, std::string query){
   updateStudent("lname", lname, student);
   updateStudent("id", id, student);
   updateStudent("section", section, student);
-
-  int day, mon, year;
-  if (!parse_birthdate(birthdate, day, mon, year)){
-    cout << "Problem with the query insert" << endl;
-    cout << "Please enter the arguments correctly" << endl;
-    invalidQuery(myQuery);
-    return myQuery;
-  }
   updateStudent("birthdate", birthdate, student);
 
   for(size_t i = 0; i < database->lsize;i++){
