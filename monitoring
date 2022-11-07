@@ -46,14 +46,14 @@ then
             touch data/students.bin
             err "Le chemin vers la base de données n'existe pas, lancement avec data/students.bin"
             set -m
-            ./tinydb data/students.bin
+            ./tinydb data/students.bin &
             echo "PID=$!"
             fg
         else
             touch $PATH_TO_DB
             err "Le chemin vers la base de données n'existe pas, lancement avec une base de données vide"
             set -m
-            ./tinydb $PATH_TO_DB
+            ./tinydb $PATH_TO_DB &
             echo "PID=$!"
             fg
         fi
