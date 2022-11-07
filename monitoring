@@ -46,7 +46,7 @@ then
             touch data/students.bin
             err "Le chemin vers la base de données n'existe pas, lancement avec data/students.bin"
             set -m
-            ./tinydb data/students.bin &
+            ./tinydb data/students.bin < $QUERIES&
             echo "PID=$!"
             fg
         else
