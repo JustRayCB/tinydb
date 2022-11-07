@@ -111,7 +111,6 @@ then
                 then
                     #si on veut supprimer le supprimer le père, on doit incrémenter le compteur
                     #de 5 afin de "passer" ses fils
-                    pid=$((pid-1))
                     kill -- -$pid
                 fi  
             fi
@@ -126,7 +125,6 @@ then
                 if [[ $pid == $PID ]]
                 then
                     #si c'est un processus principal on kill le groupe associé
-                    PID=$((PID-1))
                     kill -- -$PID
                     found=true
                     break
