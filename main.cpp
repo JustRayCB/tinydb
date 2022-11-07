@@ -62,6 +62,12 @@ int main(int argc, char const *argv[]) {
 
   
   size_t allStudents = getNumberStudent(dbPath);
+  cout << "Nb student" << allStudents << endl;
+  if (!allStudents) {
+    // If the binary file is empty
+    allStudents = 1000;
+    cout << "Your db is empty, the default size of the db is 1000 students" << endl;
+  }
   void *ptrDb = mmap(nullptr, sizeof(database_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
   void *ptrData = mmap(nullptr, sizeof(student_t)*allStudents*2, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
   if (ptrDb == MAP_FAILED) {
